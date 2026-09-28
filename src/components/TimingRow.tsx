@@ -25,6 +25,10 @@ interface Props {
   positionChange: number;
   /** Changes on every update, so the flash replays even for repeat moves. */
   updateId: number;
+  favorite: boolean;
+  /** Called with the driver's favorite key on double-click. */
+  onToggleFavorite: (key: string) => void;
+  favoriteKey: string;
 }
 
 export const TimingRow = memo(function TimingRow({
@@ -35,6 +39,9 @@ export const TimingRow = memo(function TimingRow({
   sessionFinished,
   positionChange,
   updateId,
+  favorite,
+  onToggleFavorite,
+  favoriteKey,
 }: Props) {
   const out = isOut(car);
   const rowRef = useRef<HTMLTableRowElement>(null);
@@ -53,7 +60,12 @@ export const TimingRow = memo(function TimingRow({
     <tr
       ref={rowRef}
       data-row-key={car.carNumber}
-      className={`timing-row${out ? ' timing-row--out' : ''}`}
+      className={`timing-row${out ? ' timing-row--out' : ''}${favorite ? ' timing-row--favorite' : ''}`}
+      onDoubleClick={() => onToggleFavorite(favoriteKey)}
+      // Stop a double-click from also selecting text; single-click selection still works.
+      onMouseDown={(event) => {
+        if (event.detail > 1) event.preventDefault();
+      }}
     >
       {columns.map((column) => (
         <Cell
@@ -63,6 +75,7 @@ export const TimingRow = memo(function TimingRow({
           nameFormat={nameFormat}
           sessionBest={sessionBest}
           sessionFinished={sessionFinished}
+          favorite={favorite}
         />
       ))}
     </tr>
@@ -75,7 +88,10 @@ function Cell({
   nameFormat,
   sessionBest,
   sessionFinished,
-}: Omit<Props, 'columns' | 'positionChange' | 'updateId'> & { column: ColumnDef }) {
+  favorite,
+}: Pick<Props, 'car' | 'nameFormat' | 'sessionBest' | 'sessionFinished' | 'favorite'> & {
+  column: ColumnDef;
+}) {
   const align = `cell--${column.align}`;
   switch (column.id) {
     case 'pos':
@@ -93,6 +109,11 @@ function Cell({
     case 'driver':
       return (
         <td className={`${align} cell--driver`} title={`${car.name.full} · ${car.sponsor}`}>
+          {favorite && (
+            <span className="favorite-star" title="Favorite" aria-label="Favorite">
+              ★
+            </span>
+          )}
           <span className="driver-name">{formatName(car.name, nameFormat)}</span>
           {car.name.badges.map((badge) => (
             <span
@@ -184,7 +205,10 @@ function Cell({
           title={lastStop ? `${count} stops, last on lap ${lastStop.lap}` : 'No stops'}
         >
           {indicator && (
-            <span className={`badge badge--pit badge--pit-${indicator}`}>
+            <span
+              className={`badge badge--pit badge--pit-${indicator}`}
+              title={indicator === 'in-pit' ? 'On pit road' : 'Pitted in the last 2 laps'}
+            >
               {indicator === 'in-pit' ? 'IN' : 'PIT'}
             </span>
           )}

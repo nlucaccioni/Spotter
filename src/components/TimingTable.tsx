@@ -1,8 +1,9 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Session } from '../data/model/types.ts';
+import { favoriteKey } from '../prefs/preferences.ts';
 import { useRowReorderAnimation } from '../hooks/useRowReorderAnimation.ts';
 import type { BoardLayout } from './board/layout.ts';
-import { DEFAULT_SORT, nextSort, sortCars, type SortState } from './board/sort.ts';
+import { DEFAULT_SORT, nextSort, pinToTop, sortCars, type SortState } from './board/sort.ts';
 import { TimingRow } from './TimingRow.tsx';
 
 interface Props {
@@ -11,13 +12,27 @@ interface Props {
   updateId: number;
   /** Computed by Board, which sizes the flag banner and table rows together. */
   layout: BoardLayout | null;
+  favorites: ReadonlySet<string>;
+  pinFavorites: boolean;
+  onToggleFavorite: (key: string) => void;
 }
 
-export function TimingTable({ session, positionChanges, updateId, layout }: Props) {
+export function TimingTable({
+  session,
+  positionChanges,
+  updateId,
+  layout,
+  favorites,
+  pinFavorites,
+  onToggleFavorite,
+}: Props) {
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
 
   const { cars } = session;
-  const sorted = useMemo(() => sortCars(cars, sort), [cars, sort]);
+  const sorted = useMemo(() => {
+    const byColumn = sortCars(cars, sort);
+    return pinFavorites ? pinToTop(byColumn, (c) => favorites.has(favoriteKey(c))) : byColumn;
+  }, [cars, sort, pinFavorites, favorites]);
 
   // Rows slide to their new place when the order changes (position swaps or re-sorting).
   const bodyRef = useRef<HTMLTableSectionElement>(null);
@@ -80,6 +95,9 @@ export function TimingTable({ session, positionChanges, updateId, layout }: Prop
                 sessionFinished={sessionFinished}
                 positionChange={positionChanges?.get(car.carNumber) ?? 0}
                 updateId={updateId}
+                favorite={favorites.has(favoriteKey(car))}
+                favoriteKey={favoriteKey(car)}
+                onToggleFavorite={onToggleFavorite}
               />
             ))}
           </tbody>

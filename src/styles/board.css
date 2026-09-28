@@ -359,3 +359,174 @@
 .pits__last {
   color: var(--text-muted);
 }
+
+/* ---- Favorites ---- */
+
+.timing-row--favorite {
+  box-shadow: inset 0.25em 0 0 var(--favorite);
+}
+
+.timing-row--favorite .cell--driver {
+  color: var(--favorite);
+}
+
+.favorite-star {
+  margin-right: 0.3em;
+  color: var(--favorite);
+}
+
+/* ---- Display mode: cursor and controls hide after inactivity ---- */
+
+.app--idle,
+.app--idle * {
+  cursor: none !important;
+}
+
+.controls {
+  display: flex;
+  flex: none;
+  gap: 6px;
+  transition: opacity 0.3s;
+}
+
+.controls--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.controls--hidden:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.control-button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.control-button:hover {
+  background: var(--badge-bg);
+}
+
+.control-button:focus-visible {
+  outline: 2px solid var(--badge-pit);
+  outline-offset: 2px;
+}
+
+.control-button svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ---- Settings drawer ---- */
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: var(--overlay);
+}
+
+.drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 100%);
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  font-size: 0.95rem;
+}
+
+.drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.drawer__header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.drawer__close,
+.drawer__link {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.drawer__link {
+  margin-top: 8px;
+}
+
+.drawer__section {
+  padding: 12px 0;
+  border-top: 1px solid var(--border);
+}
+
+.drawer__section h3 {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.drawer__hint {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.drawer__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 2px 12px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.toggle input,
+.segmented input {
+  accent-color: var(--favorite);
+}
+
+.segmented {
+  display: flex;
+  gap: 16px;
+  padding: 4px 0 8px;
+}
+
+.segmented__option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}

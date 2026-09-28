@@ -7,6 +7,13 @@
     <meta name="description" content="Unofficial live timing board for NASCAR sessions." />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>Spotter · NASCAR Live Timing</title>
+    <script>
+      // Apply a saved light theme before first paint (see src/prefs/store.ts).
+      try {
+        var saved = JSON.parse(localStorage.getItem('spotter.preferences.v1') || '{}');
+        if (saved.theme === 'light') document.documentElement.dataset.theme = 'light';
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,7 +1,9 @@
-import { useMemo, type CSSProperties } from 'react';
+import { useCallback, useMemo, type CSSProperties } from 'react';
 import type { Session } from '../data/model/types.ts';
 import type { PollStatus } from '../data/polling/poller.ts';
 import { useElementSize } from '../hooks/useElementSize.ts';
+import { usePreferences } from '../hooks/usePreferences.ts';
+import { toggleInList } from '../prefs/preferences.ts';
 import { computeBoardLayout } from './board/layout.ts';
 import { FlagBanner } from './FlagBanner.tsx';
 import { SessionHeader } from './SessionHeader.tsx';
@@ -23,6 +25,14 @@ interface Props {
  * depend on row size, so there's no feedback loop).
  */
 export function Board({ session, replayLabel, positionChanges, updateId, ...status }: Props) {
+  const [prefs, updatePrefs] = usePreferences();
+  const hidden = useMemo(() => new Set(prefs.hiddenColumns), [prefs.hiddenColumns]);
+  const favorites = useMemo(() => new Set(prefs.favorites), [prefs.favorites]);
+  const toggleFavorite = useCallback(
+    (key: string) => updatePrefs((p) => ({ favorites: toggleInList(p.favorites, key) })),
+    [updatePrefs],
+  );
+
   const [boardRef, board] = useElementSize<HTMLDivElement>();
   const [headerRef, header] = useElementSize<HTMLDivElement>();
 
@@ -30,9 +40,12 @@ export function Board({ session, replayLabel, positionChanges, updateId, ...stat
   const layout = useMemo(
     () =>
       board && header
-        ? computeBoardLayout(board.width, board.height - header.height, carCount, 1)
+        ? computeBoardLayout(board.width, board.height - header.height, carCount, {
+            extraRows: 1,
+            hidden,
+          })
         : null,
-    [board, header, carCount],
+    [board, header, carCount, hidden],
   );
 
   const style = layout
@@ -59,6 +72,9 @@ export function Board({ session, replayLabel, positionChanges, updateId, ...stat
           positionChanges={positionChanges}
           updateId={updateId}
           layout={layout}
+          favorites={favorites}
+          pinFavorites={prefs.pinFavorites}
+          onToggleFavorite={toggleFavorite}
         />
       </main>
     </div>

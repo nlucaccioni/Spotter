@@ -22,6 +22,8 @@
   --badge-bg: #2a313a;
   --badge-contender: #e3b341;
   --badge-pit: #58a6ff;
+  --favorite: #39c5cf;
+  --overlay: rgba(0, 0, 0, 0.55);
   /* Opaque (blended with the background) so a flashing row that is sliding still covers others. */
   --flash-up: color-mix(in srgb, #3fb950 35%, var(--bg));
   --flash-down: color-mix(in srgb, #f0706a 35%, var(--bg));
@@ -48,6 +50,8 @@
   --badge-bg: #dde1e6;
   --badge-contender: #9a6700;
   --badge-pit: #0969da;
+  --favorite: #0a7d88;
+  --overlay: rgba(0, 0, 0, 0.3);
   --flash-up: color-mix(in srgb, #1a7f37 25%, var(--bg));
   --flash-down: color-mix(in srgb, #cf222e 22%, var(--bg));
 }
@@ -98,7 +102,11 @@ body {
 }
 
 .app__footer {
-  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 8px 3px 12px;
   border-top: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 0.7rem;
