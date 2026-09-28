@@ -146,6 +146,23 @@
   line-height: 1;
 }
 
+/* Geist Sans and Geist Mono sit at different heights in their line boxes, so sans cells looked
+   ~1px low next to mono ones. Trimming each cell's line box to cap height → baseline centers
+   the capitals of both fonts on the row. */
+.timing-table th,
+.timing-table td {
+  text-box: trim-both cap alphabetic;
+}
+
+/* Browsers without text-box trimming (Firefox, for now): nudge mono cells down by the measured
+   difference between the two fonts instead. */
+@supports not (text-box: trim-both cap alphabetic) {
+  .timing-table .cell--mono {
+    position: relative;
+    top: 0.045em;
+  }
+}
+
 .timing-table thead th {
   position: sticky;
   top: 0;
@@ -245,7 +262,8 @@
   font-size: 0.68em;
   font-weight: 700;
   line-height: 1;
-  vertical-align: 0.12em;
+  /* Measured so the badge letter centers on the row's capitals. */
+  vertical-align: 0.15em;
 }
 
 .badge--contender {
@@ -261,9 +279,15 @@
   color: var(--badge-pit);
 }
 
-.badge--pit-in-pit {
+/* On pit road: solid. Out lap: outlined, a step quieter. */
+.badge--pit-pit {
   background: var(--badge-pit);
   color: var(--bg);
+}
+
+.badge--pit-out {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--badge-pit);
 }
 
 /* ---- Position-change flash ---- */
