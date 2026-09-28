@@ -26,8 +26,8 @@
   --flash-up: color-mix(in srgb, #3fb950 35%, var(--bg));
   --flash-down: color-mix(in srgb, #f0706a 35%, var(--bg));
 
-  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, monospace;
+  --font-ui: 'Geist Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, monospace;
 }
 
 :root[data-theme='light'] {

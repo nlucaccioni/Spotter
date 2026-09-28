@@ -41,7 +41,7 @@ This document is the source of truth for scope and architecture. Read it fully b
 - **Lint/format:** ESLint + Prettier.
 - **Package manager:** npm.
 
-**Decided in milestone 1 (2026-09-27):** Vite 8, React 19, TypeScript 6 (strict, plus `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`), Vitest 5, ESLint 9 flat config + typescript-eslint, Prettier 3. Node 24 (`.nvmrc`). Plain CSS with CSS variables; dark theme default via `<html data-theme>`.
+**Decided in milestone 1 (2026-09-27):** Vite 8, React 19, TypeScript 6 (strict, plus `noUncheckedIndexedAccess` and `exactOptionalPropertyTypes`), Vitest 5, ESLint 9 flat config + typescript-eslint, Prettier 3. Node 24 (`.nvmrc`). Plain CSS with CSS variables; dark theme default via `<html data-theme>`. Fonts: Geist Sans for all sans-serif text and Geist Mono for all monospaced (timing) text, self-hosted via `@fontsource-variable/geist` and `@fontsource-variable/geist-mono` (SIL OFL 1.1; no third-party font requests).
 
 ---
 
