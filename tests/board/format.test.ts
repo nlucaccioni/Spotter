@@ -44,6 +44,7 @@ describe('format helpers', () => {
   it('formats pit stops as count and last pit lap', () => {
     expect(formatPits(larson)).toBe('5 · L215');
     expect(formatPits(withStops(10, []))).toBe('0');
+    expect(formatPits(larson, true)).toBe('5');
   });
 
   it('describes status and marks cars out of the race', () => {
@@ -61,6 +62,11 @@ describe('pitIndicator', () => {
     expect(pitIndicator(withStops(51, [stop(50, 2000, 2035)]), false)).toBe('recent');
     expect(pitIndicator(withStops(52, [stop(50, 2000, 2035)]), false)).toBeNull();
     expect(pitIndicator(withStops(52, []), false)).toBeNull();
+  });
+
+  it('shows nothing for a car that is out of the race', () => {
+    const out = { ...withStops(200, [stop(112, 4400, null)]), statusCode: 3, isOnTrack: false };
+    expect(pitIndicator(out, false)).toBeNull();
   });
 
   it('shows nothing once the session is finished', () => {
