@@ -65,7 +65,13 @@ Fixture: `tests/fixtures/cup-2026-kansas-final.json` (race_id 5628, 267/267 laps
   - 2 all-zero placeholders at the start of every car's list (lap 0, no times, ranks copied from
     the start). Dropped.
   - Normal stops: lap, pit-in and pit-out elapsed times all present.
-  - 4 cars (#1, #22, #34, #77) end with an entry that has a lap number but zero times. The race
-    was over, so these are not in-progress stops. **Meaning unconfirmed**; kept as untimed stops.
-    Watch during a live race whether an in-progress stop looks like this or has a pit-in time
-    and zero pit-out time.
+  - **Post-race pit-road entries (confirmed 2026-09-28):** after the checkered flag, cars drive
+    down pit road and the feed logs it as a stop. 19 cars have one with `pit_in_leader_lap` =
+    267 (the final lap) and a pit-in time after the race's `elapsed_time` (e.g. 10409 s vs
+    10361 s). 4 more (#1, #22, #34, #77) have one on leader lap 267 with no times at all; #77's
+    own lap count was 264, so these follow the leader's lap. The parser drops any stop on or
+    after the leader's final lap, or with a pit-in time after the session's elapsed time.
+  - Still to confirm during a live race: what an in-progress stop looks like (expected: a pit-in
+    time and a zero pit-out time).
+  - Also to confirm live: whether `is_on_track` goes false while a car is on pit road. The board
+    dims rows with `is_on_track: false`, so if it does, rows would dim during stops.

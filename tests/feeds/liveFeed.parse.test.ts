@@ -93,7 +93,7 @@ describe('parseLiveFeed — Kansas 2026 fixture (finished race)', () => {
     expect(total).toBe(267);
   });
 
-  it('drops placeholder pit stops and keeps untimed trailing ones', () => {
+  it('drops placeholder pit stops', () => {
     const larson = car(session, '5');
     expect(larson.pitStops).toHaveLength(5);
     expect(larson.pitStops[0]).toMatchObject({
@@ -103,9 +103,16 @@ describe('parseLiveFeed — Kansas 2026 fixture (finished race)', () => {
       durationSeconds: 36.821,
       positionChange: -2,
     });
-    const last77 = car(session, '77').pitStops.at(-1)!;
-    expect(last77).toMatchObject({ inTime: null, outTime: null, durationSeconds: null });
-    expect(last77.lap).toBeGreaterThan(0);
+  });
+
+  it('drops post-race pit-road entries logged on the final lap', () => {
+    // Timed entry after the checkered flag (pit-in 10409 s > race elapsed 10361 s).
+    expect(car(session, '2').pitStops.at(-1)!.lap).toBeLessThan(267);
+    // Untimed entry on the leader's final lap, although #77 was only on its lap 264.
+    expect(car(session, '77').pitStops.at(-1)!.inTime).not.toBeNull();
+    const all = session.cars.flatMap((c) => c.pitStops);
+    expect(all.every((p) => p.inTime !== null && p.outTime !== null)).toBe(true);
+    expect(all.every((p) => (p.leaderLap ?? 0) < 267)).toBe(true);
   });
 
   it('finds the session fastest lap', () => {
@@ -190,13 +197,27 @@ describe('toPitStops', () => {
     positions_gained_lossed: 0,
   };
 
+  const race = { lapsInRace: 267, elapsedSeconds: 5000 };
+
   it('keeps an in-progress stop (pit-in time, no pit-out time yet)', () => {
-    const stops = toPitStops([
-      zero,
-      { ...zero, pit_in_lap_count: 50, pit_in_leader_lap: 50, pit_in_elapsed_time: 2000 },
-    ]);
+    const stops = toPitStops(
+      [zero, { ...zero, pit_in_lap_count: 50, pit_in_leader_lap: 50, pit_in_elapsed_time: 2000 }],
+      race,
+    );
     expect(stops).toEqual([
       expect.objectContaining({ lap: 50, inTime: 2000, outTime: null, durationSeconds: null }),
     ]);
+  });
+
+  it('drops stops on the final leader lap or after the session clock', () => {
+    const stop = { ...zero, pit_in_lap_count: 100, pit_in_leader_lap: 100 };
+    expect(toPitStops([{ ...stop, pit_in_leader_lap: 267 }], race)).toEqual([]);
+    expect(toPitStops([{ ...stop, pit_in_elapsed_time: 5001 }], race)).toEqual([]);
+    expect(toPitStops([{ ...stop, pit_in_elapsed_time: 4000 }], race)).toHaveLength(1);
+  });
+
+  it('applies no race bounds when the feed has none', () => {
+    const stop = { ...zero, pit_in_lap_count: 3, pit_in_leader_lap: 3, pit_in_elapsed_time: 90 };
+    expect(toPitStops([stop], { lapsInRace: 0, elapsedSeconds: 0 })).toHaveLength(1);
   });
 });

@@ -37,7 +37,8 @@ export function parseLiveFeed(raw: unknown): ParseResult {
   });
   vehicles.sort((a, b) => a.running_position - b.running_position);
 
-  const cars = vehicles.map((v, i) => toCar(v, i === 0 ? undefined : vehicles[i - 1]));
+  const race: RaceBounds = { lapsInRace: feed.laps_in_race, elapsedSeconds: feed.elapsed_time };
+  const cars = vehicles.map((v, i) => toCar(v, i === 0 ? undefined : vehicles[i - 1], race));
 
   const session: Session = {
     raceId: feed.race_id,
@@ -66,7 +67,7 @@ export function parseLiveFeed(raw: unknown): ParseResult {
   return { ok: true, session, issues };
 }
 
-function toCar(v: RawVehicle, ahead: RawVehicle | undefined): CarState {
+function toCar(v: RawVehicle, ahead: RawVehicle | undefined, race: RaceBounds): CarState {
   const lapsLedRanges = v.laps_led.map(toLapRange);
   return {
     position: v.running_position,
@@ -94,7 +95,7 @@ function toCar(v: RawVehicle, ahead: RawVehicle | undefined): CarState {
       0,
     ),
     lapsLedRanges,
-    pitStops: toPitStops(v.pit_stops),
+    pitStops: toPitStops(v.pit_stops, race),
     statusCode: v.status,
     isOnTrack: v.is_on_track,
     isOnDvp: v.is_on_dvp,
@@ -119,12 +120,24 @@ function toLapRange(r: RawLapRange): LapRange {
   return { start: r.start_lap, end: r.end_lap };
 }
 
-// Each car's list starts with all-zero placeholder entries (lap 0, no times); drop those.
-// Entries with a lap but no times are kept as untimed stops (seen at the end of a finished
-// race; meaning unconfirmed, see docs/feed-notes.md).
-export function toPitStops(raw: RawPitStop[]): PitStop[] {
+export interface RaceBounds {
+  lapsInRace: number;
+  elapsedSeconds: number;
+}
+
+// Dropped (see docs/feed-notes.md):
+// - the all-zero placeholder entries at the start of every car's list;
+// - post-race pit-road entries: after the checkered flag, cars drive down pit road and the
+//   feed logs that as a stop on the leader's final lap, with a pit-in time after the
+//   session's elapsed time (or no times at all).
+export function toPitStops(raw: RawPitStop[], race: RaceBounds): PitStop[] {
+  const isPlaceholder = (p: RawPitStop) =>
+    p.pit_in_lap_count === 0 && !positive(p.pit_in_elapsed_time);
+  const isPostRace = (p: RawPitStop) =>
+    (race.lapsInRace > 0 && (p.pit_in_leader_lap ?? 0) >= race.lapsInRace) ||
+    (race.elapsedSeconds > 0 && (p.pit_in_elapsed_time ?? 0) > race.elapsedSeconds);
   return raw
-    .filter((p) => p.pit_in_lap_count > 0 || positive(p.pit_in_elapsed_time))
+    .filter((p) => !isPlaceholder(p) && !isPostRace(p))
     .map((p) => {
       const inTime = positive(p.pit_in_elapsed_time) ? p.pit_in_elapsed_time : null;
       const outTime = positive(p.pit_out_elapsed_time) ? p.pit_out_elapsed_time : null;
