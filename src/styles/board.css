@@ -158,6 +158,12 @@
   outline-offset: -2px;
 }
 
+.timing-table tbody tr {
+  /* Opaque and positioned so a row sliding past others covers them cleanly. */
+  position: relative;
+  background: var(--bg);
+}
+
 .timing-table tbody tr:nth-child(even) {
   background: var(--row-alt);
 }

@@ -50,7 +50,11 @@ export const TimingRow = memo(function TimingRow({
   }, [positionChange, updateId]);
 
   return (
-    <tr ref={rowRef} className={`timing-row${out ? ' timing-row--out' : ''}`}>
+    <tr
+      ref={rowRef}
+      data-row-key={car.carNumber}
+      className={`timing-row${out ? ' timing-row--out' : ''}`}
+    >
       {columns.map((column) => (
         <Cell
           key={column.id}

@@ -1,6 +1,7 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { Session } from '../data/model/types.ts';
 import { useElementSize } from '../hooks/useElementSize.ts';
+import { useRowReorderAnimation } from '../hooks/useRowReorderAnimation.ts';
 import { computeBoardLayout } from './board/layout.ts';
 import { DEFAULT_SORT, nextSort, sortCars, type SortState } from './board/sort.ts';
 import { TimingRow } from './TimingRow.tsx';
@@ -21,6 +22,11 @@ export function TimingTable({ session, positionChanges, updateId }: Props) {
     [size, cars.length],
   );
   const sorted = useMemo(() => sortCars(cars, sort), [cars, sort]);
+
+  // Rows slide to their new place when the order changes (position swaps or re-sorting).
+  const bodyRef = useRef<HTMLTableSectionElement>(null);
+  const order = sorted.map((c) => c.carNumber).join(',');
+  useRowReorderAnimation(bodyRef, order, layout?.rowHeightPx);
 
   const sessionBest = session.fastestLap?.seconds ?? null;
   const sessionFinished = session.flag.kind === 'checkered';
@@ -78,7 +84,7 @@ export function TimingTable({ session, positionChanges, updateId }: Props) {
               })}
             </tr>
           </thead>
-          <tbody>
+          <tbody ref={bodyRef}>
             {sorted.map((car) => (
               <TimingRow
                 key={car.carNumber}
