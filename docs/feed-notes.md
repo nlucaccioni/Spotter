@@ -22,9 +22,11 @@ See `PROJECT_BRIEF.md` §3 for the baseline. Add a dated entry whenever somethin
 
 ## `series_id`
 
-| Value | Series | Confirmed |
-| ----- | ------ | --------- |
-| 1     | Cup    | Yes       |
+| Value | Series                                  | Confirmed   |
+| ----- | --------------------------------------- | ----------- |
+| 1     | Cup                                     | Yes         |
+| 2     | O'Reilly Auto Parts Series              | Yes (owner) |
+| 3     | Craftsman Truck Series ("Truck Series") | Yes (owner) |
 
 ## `run_type`
 

@@ -14,6 +14,8 @@ describe('manufacturerFromCode', () => {
 describe('seriesFromId', () => {
   it('maps known ids and labels unknown ones', () => {
     expect(seriesFromId(1)).toEqual({ id: 1, name: 'Cup Series' });
+    expect(seriesFromId(2).name).toBe("O'Reilly Auto Parts Series");
+    expect(seriesFromId(3).name).toBe('Craftsman Truck Series');
     expect(seriesFromId(8).name).toBe('Series 8');
     expect(seriesFromId(null).name).toBe('Unknown series');
   });

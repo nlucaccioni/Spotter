@@ -10,11 +10,10 @@ export function manufacturerFromCode(code: string): Manufacturer {
   return { code, name: MANUFACTURERS[code] ?? (code || 'Unknown') };
 }
 
-// Only 1 = Cup is confirmed; 2 and 3 are believed (see docs/feed-notes.md).
 const SERIES: Record<number, string> = {
   1: 'Cup Series',
   2: "O'Reilly Auto Parts Series",
-  3: 'Truck Series',
+  3: 'Craftsman Truck Series',
 };
 
 export function seriesFromId(id: number | null): Series {
