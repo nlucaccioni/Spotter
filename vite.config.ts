@@ -11,7 +11,5 @@ export default defineConfig({
     // Individual test files can opt in with `// @vitest-environment jsdom` later.
     environment: 'node',
     include: ['tests/**/*.test.ts', 'src/**/*.test.ts'],
-    // No tests until milestone 2 adds the data layer.
-    passWithNoTests: true,
   },
 });
