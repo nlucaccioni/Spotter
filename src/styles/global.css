@@ -66,6 +66,32 @@ body {
   padding: 16px;
 }
 
+.connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+
+.connection__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.connection--live .connection__dot {
+  background: var(--flag-green);
+}
+
+.connection--error .connection__dot {
+  background: var(--flag-red);
+}
+
+.connection--connecting .connection__dot {
+  background: var(--flag-yellow);
+}
+
 .app__footer {
   padding: 6px 16px;
   border-top: 1px solid var(--border);
