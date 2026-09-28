@@ -7,9 +7,11 @@ interface Props {
   status: PollStatus;
   lastChanged: number | null;
   nextPollAt: number | null;
+  /** Dev replay indicator, so a recording is never mistaken for live timing. */
+  replayLabel?: string | null;
 }
 
-export function SessionHeader({ session, status, lastChanged, nextPollAt }: Props) {
+export function SessionHeader({ session, status, lastChanged, nextPollAt, replayLabel }: Props) {
   const { stage, cautions } = session;
   return (
     <header className="session-header">
@@ -27,6 +29,7 @@ export function SessionHeader({ session, status, lastChanged, nextPollAt }: Prop
         )}
         <Stat label="Cautions" value={`${cautions.segments} (${cautions.laps} laps)`} />
         <Stat label="Lead changes" value={`${session.leadChanges} (${session.leaders} leaders)`} />
+        {replayLabel && <span className="replay-badge">{replayLabel}</span>}
         <ConnectionStatus
           status={status}
           hasData

@@ -47,16 +47,17 @@ export type PitIndicator = 'in-pit' | 'recent' | null;
 /** How many laps a stop counts as "recent" for the row indicator. */
 const RECENT_PIT_LAPS = 2;
 
-/** Live-session pit indicator. Not shown once the session is finished. */
+/** Live-session pit indicator. Not shown once the session is finished, or for cars out of it. */
 export function pitIndicator(car: CarState, sessionFinished: boolean): PitIndicator {
-  if (sessionFinished) return null;
+  if (sessionFinished || isOut(car)) return null;
   const last: PitStop | undefined = car.pitStops.at(-1);
   if (!last) return null;
   if (last.inTime !== null && last.outTime === null) return 'in-pit';
   return car.lapsCompleted - last.lap < RECENT_PIT_LAPS ? 'recent' : null;
 }
 
-export function formatPits(car: CarState): string {
+export function formatPits(car: CarState, compact = false): string {
   const last = car.pitStops.at(-1);
-  return last ? `${car.pitStops.length} · L${last.lap}` : '0';
+  if (!last) return '0';
+  return compact ? String(car.pitStops.length) : `${car.pitStops.length} · L${last.lap}`;
 }

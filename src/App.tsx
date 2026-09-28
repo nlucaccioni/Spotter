@@ -1,11 +1,13 @@
 import { ConnectionStatus } from './components/ConnectionStatus.tsx';
+import { EventTicker } from './components/EventTicker.tsx';
 import { FlagBanner } from './components/FlagBanner.tsx';
 import { SessionHeader } from './components/SessionHeader.tsx';
 import { TimingTable } from './components/TimingTable.tsx';
 import { useLiveSession } from './hooks/useLiveSession.ts';
 
 export default function App() {
-  const { session, status, lastChanged, nextPollAt } = useLiveSession();
+  const { session, status, lastChanged, nextPollAt, events, positionChanges, updateId, replay } =
+    useLiveSession();
 
   return (
     <div className="app">
@@ -22,10 +24,12 @@ export default function App() {
             status={status}
             lastChanged={lastChanged}
             nextPollAt={nextPollAt}
+            replayLabel={replay && `Replay · ${replay.speed}×`}
           />
           <main className="app__main">
-            <TimingTable session={session} />
+            <TimingTable session={session} positionChanges={positionChanges} updateId={updateId} />
           </main>
+          <EventTicker events={events} />
         </>
       ) : (
         <main className="app__main app__main--empty">

@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { formatGap } from '../data/model/gaps.ts';
 import type { CarState } from '../data/model/types.ts';
 import {
@@ -21,6 +21,10 @@ interface Props {
   /** Session-best lap time, for highlighting. */
   sessionBest: number | null;
   sessionFinished: boolean;
+  /** Positions gained (+) or lost (−) on the latest update; 0 = no change. */
+  positionChange: number;
+  /** Changes on every update, so the flash replays even for repeat moves. */
+  updateId: number;
 }
 
 export const TimingRow = memo(function TimingRow({
@@ -29,10 +33,24 @@ export const TimingRow = memo(function TimingRow({
   nameFormat,
   sessionBest,
   sessionFinished,
+  positionChange,
+  updateId,
 }: Props) {
   const out = isOut(car);
+  const rowRef = useRef<HTMLTableRowElement>(null);
+
+  // Brief up/down flash when the car changes position. Toggling the class (with a reflow in
+  // between) restarts the CSS animation even if the previous flash hasn't finished.
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row || positionChange === 0) return;
+    row.classList.remove('timing-row--flash-up', 'timing-row--flash-down');
+    void row.offsetWidth;
+    row.classList.add(positionChange > 0 ? 'timing-row--flash-up' : 'timing-row--flash-down');
+  }, [positionChange, updateId]);
+
   return (
-    <tr className={`timing-row${out ? ' timing-row--out' : ''}`}>
+    <tr ref={rowRef} className={`timing-row${out ? ' timing-row--out' : ''}`}>
       {columns.map((column) => (
         <Cell
           key={column.id}
@@ -53,7 +71,7 @@ function Cell({
   nameFormat,
   sessionBest,
   sessionFinished,
-}: Omit<Props, 'columns'> & { column: ColumnDef }) {
+}: Omit<Props, 'columns' | 'positionChange' | 'updateId'> & { column: ColumnDef }) {
   const align = `cell--${column.align}`;
   switch (column.id) {
     case 'pos':
@@ -161,7 +179,7 @@ function Cell({
               {indicator === 'in-pit' ? 'IN' : 'PIT'}
             </span>
           )}
-          {formatPits(car)}
+          {formatPits(car, indicator !== null)}
         </td>
       );
     }

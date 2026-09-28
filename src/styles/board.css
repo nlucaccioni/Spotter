@@ -247,3 +247,92 @@
   background: var(--badge-pit);
   color: var(--bg);
 }
+
+/* ---- Position-change flash ---- */
+
+@keyframes flash-up {
+  from {
+    background-color: var(--flash-up);
+  }
+}
+
+@keyframes flash-down {
+  from {
+    background-color: var(--flash-down);
+  }
+}
+
+.timing-row--flash-up {
+  animation: flash-up 2s ease-out;
+}
+
+.timing-row--flash-down {
+  animation: flash-down 2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timing-row--flash-up,
+  .timing-row--flash-down {
+    animation-duration: 0.01s;
+  }
+}
+
+/* ---- Event ticker ---- */
+
+.ticker {
+  padding: 4px 12px;
+  border-top: 1px solid var(--border);
+  font-size: clamp(0.8rem, 1.1vh, 1.1rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ticker__list {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ticker__item {
+  display: inline;
+}
+
+.ticker__item + .ticker__item::before {
+  content: '·';
+  margin: 0 0.6em;
+  color: var(--text-muted);
+}
+
+.ticker__item:first-child {
+  font-weight: 600;
+}
+
+.ticker__lap {
+  margin-right: 0.4em;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.ticker__item--flag {
+  color: var(--badge-contender);
+}
+
+.ticker__item--lead-change,
+.ticker__item--fastest-lap {
+  color: var(--session-best);
+}
+
+/* ---- Dev replay badge ---- */
+
+.replay-badge {
+  padding: 0.1em 0.5em;
+  border-radius: 4px;
+  background: var(--session-best);
+  color: var(--bg);
+  font-weight: 700;
+  font-size: 0.85em;
+  text-transform: uppercase;
+}

@@ -7,9 +7,11 @@ import { TimingRow } from './TimingRow.tsx';
 
 interface Props {
   session: Session;
+  positionChanges: Map<string, number> | null;
+  updateId: number;
 }
 
-export function TimingTable({ session }: Props) {
+export function TimingTable({ session, positionChanges, updateId }: Props) {
   const [containerRef, size] = useElementSize<HTMLDivElement>();
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
 
@@ -85,6 +87,8 @@ export function TimingTable({ session }: Props) {
                 nameFormat={layout.nameFormat}
                 sessionBest={sessionBest}
                 sessionFinished={sessionFinished}
+                positionChange={positionChanges?.get(car.carNumber) ?? 0}
+                updateId={updateId}
               />
             ))}
           </tbody>

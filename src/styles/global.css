@@ -22,6 +22,8 @@
   --badge-bg: #2a313a;
   --badge-contender: #e3b341;
   --badge-pit: #58a6ff;
+  --flash-up: rgba(63, 185, 80, 0.35);
+  --flash-down: rgba(240, 112, 106, 0.35);
 
   --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Consolas, monospace;
@@ -45,6 +47,8 @@
   --badge-bg: #dde1e6;
   --badge-contender: #9a6700;
   --badge-pit: #0969da;
+  --flash-up: rgba(26, 127, 55, 0.25);
+  --flash-down: rgba(207, 34, 46, 0.22);
 }
 
 *,
