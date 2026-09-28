@@ -57,3 +57,13 @@ Fixture: `tests/fixtures/cup-2026-kansas-final.json` (race_id 5628, 267/267 laps
   - Top level: `time_of_day` (seconds since local midnight, e.g. `79885`), `avg_diff_1to3`.
   - Per vehicle: `vehicle_elapsed_time`, `qualifying_status`.
 - **`status` values seen:** `1` and `3` only.
+- **`laps_led` includes lap 0:** the pole-sitter (#22) has a `{ start_lap: 0, end_lap: 0 }` range,
+  so the raw ranges sum to 268 for a 267-lap race. Lap 0 is not counted as a lap led.
+- **`pit_stops` entry types** (across all 36 cars):
+  - 2 all-zero placeholders at the start of every car's list (lap 0, no times, ranks copied from
+    the start). Dropped.
+  - Normal stops: lap, pit-in and pit-out elapsed times all present.
+  - 4 cars (#1, #22, #34, #77) end with an entry that has a lap number but zero times. The race
+    was over, so these are not in-progress stops. **Meaning unconfirmed**; kept as untimed stops.
+    Watch during a live race whether an in-progress stop looks like this or has a pit-in time
+    and zero pit-out time.

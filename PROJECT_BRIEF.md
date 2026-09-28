@@ -163,6 +163,7 @@ src/
       gaps.ts             # gap-to-leader / gap-to-car-ahead / laps-down logic
       diff.ts             # Compare consecutive snapshots -> events (pos change, pit in/out, flag change, lead change)
       flags.ts            # flag_state -> label/color
+      lookups.ts          # manufacturer codes, series ids -> display names
     polling/
       poller.ts           # Framework-agnostic polling engine implementing §3.3
   hooks/
@@ -295,7 +296,7 @@ Pos · ± (position change since start or last N laps) · Car # · Driver (with 
 ## 8. Milestones
 
 1. **Scaffold:** Vite + React + TS, ESLint/Prettier, Vitest, GitHub Actions Pages deploy, README. (CNAME dropped until a custom domain exists.) ✅ Done 2026-09-27.
-2. **Data layer:** zod schema, parser, names, gaps, flags, and tests against the fixture.
+2. **Data layer:** zod schema, parser, names, gaps, flags, and tests against the fixture. ✅ Done 2026-09-27. The parser is pure and returns `issues` (dropped rows) instead of logging; logging, including the dev-only log of distinct `flag_state` values (§3.4), happens where snapshots arrive, in milestone 3.
 3. **Poller:** polling engine per §3.3 plus the `useLiveSession` hook and connection status.
 4. **Timing board v1:** portrait-first layout per §5.1 (whole field fits, column priority), header, flag banner, table, row highlights, sorting.
 5. **Replay mode + diff events:** event ticker, position-change flashes.
