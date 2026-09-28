@@ -87,8 +87,30 @@ describe('computeBoardLayout — driver name length', () => {
 
 describe('computeBoardLayout — extra rows', () => {
   it('fits extra row-sized elements (the flag banner) alongside the table', () => {
-    const withBanner = computeBoardLayout(1080, 1700, 40, 1);
+    const withBanner = computeBoardLayout(1080, 1700, 40, { extraRows: 1 });
     expect(withBanner.rowHeightPx).toBe(Math.floor(1700 / 42));
     expect(withBanner.rowHeightPx * 42).toBeLessThanOrEqual(1700);
+  });
+});
+
+describe('computeBoardLayout — hidden columns', () => {
+  it('drops hidden columns, including priority-1 ones', () => {
+    const shown = computeBoardLayout(1080, 1750, 40, {
+      hidden: new Set<ColumnId>(['interval', 'best']),
+    }).columns.map((c) => c.id);
+    expect(shown).not.toContain('interval');
+    expect(shown).not.toContain('best');
+    expect(shown).toContain('gap');
+  });
+
+  it('gives the freed width to lower-priority columns', () => {
+    const width = 864;
+    const before = computeBoardLayout(width, 1400, 36).columns.map((c) => c.id);
+    const after = computeBoardLayout(width, 1400, 36, {
+      hidden: new Set<ColumnId>(['change', 'led']),
+    }).columns.map((c) => c.id);
+    expect(before).not.toContain('status');
+    expect(after.length).toBeGreaterThanOrEqual(before.length - 2);
+    expect(after).toContain('mfr');
   });
 });

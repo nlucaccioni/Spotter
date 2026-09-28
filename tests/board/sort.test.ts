@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SORT, nextSort, sortCars } from '../../src/components/board/sort.ts';
+import { DEFAULT_SORT, nextSort, pinToTop, sortCars } from '../../src/components/board/sort.ts';
 import { parseLiveFeed } from '../../src/data/feeds/liveFeed.parse.ts';
 import kansas from '../fixtures/cup-2026-kansas-final.json';
 
@@ -55,5 +55,14 @@ describe('sortCars', () => {
   it('sorts by driver last name', () => {
     const sorted = sortCars(cars, { column: 'driver', direction: 'asc' });
     expect(sorted[0]!.name.last).toBe('Allmendinger');
+  });
+});
+
+describe('pinToTop', () => {
+  it('moves pinned cars to the top and keeps order within each group', () => {
+    const pinned = new Set(['24', '4']);
+    const result = pinToTop(cars, (c) => pinned.has(c.carNumber));
+    expect(numbers(result).slice(0, 3)).toEqual(['24', '4', '5']);
+    expect(result).toHaveLength(cars.length);
   });
 });

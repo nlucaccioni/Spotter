@@ -93,6 +93,11 @@ export const LIMITS = {
   maxFontPx: 22,
 };
 
+export interface LayoutOptions {
+  extraRows?: number;
+  hidden?: ReadonlySet<ColumnId>;
+}
+
 export interface BoardLayout {
   rowHeightPx: number;
   fontSizePx: number;
@@ -107,13 +112,14 @@ export interface BoardLayout {
  * @param height available height in CSS px for the table (including its header row) plus any
  *               extra rows
  * @param carCount number of rows in the field
- * @param extraRows other elements sized as one row each, e.g. the flag banner
+ * @param options.extraRows other elements sized as one row each, e.g. the flag banner
+ * @param options.hidden columns the user turned off; their width goes to the others
  */
 export function computeBoardLayout(
   width: number,
   height: number,
   carCount: number,
-  extraRows = 0,
+  { extraRows = 0, hidden = new Set<ColumnId>() }: LayoutOptions = {},
 ): BoardLayout {
   const rows = Math.max(1, carCount) + 1 + extraRows; // + table header row
   const fitted = Math.floor(height / rows);
@@ -126,9 +132,12 @@ export function computeBoardLayout(
   );
 
   const available = width / fontSizePx;
-  const chosen = new Set<ColumnId>(COLUMNS.filter((c) => c.priority === 1).map((c) => c.id));
+  const chosen = new Set<ColumnId>(
+    COLUMNS.filter((c) => c.priority === 1 && !hidden.has(c.id)).map((c) => c.id),
+  );
   let used = sumWidths(chosen) + DRIVER_WIDTH_EM.initial;
   for (const id of OPTIONAL_ORDER) {
+    if (hidden.has(id)) continue;
     const w = column(id).widthEm;
     // Columns drop in strict reverse-priority order, so stop at the first that doesn't fit.
     if (used + w > available + 1e-6) break;

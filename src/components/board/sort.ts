@@ -68,6 +68,14 @@ function gapRank(gap: Gap): number | null {
   }
 }
 
+/** Moves cars matching `pinned` to the top, keeping the existing order within each group. */
+export function pinToTop(
+  cars: readonly CarState[],
+  pinned: (car: CarState) => boolean,
+): CarState[] {
+  return [...cars.filter(pinned), ...cars.filter((car) => !pinned(car))];
+}
+
 /** Returns a sorted copy. Missing values always sort last; ties fall back to position. */
 export function sortCars(cars: readonly CarState[], sort: SortState): CarState[] {
   const sign = sort.direction === 'asc' ? 1 : -1;
