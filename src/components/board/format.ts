@@ -42,18 +42,25 @@ export function isOut(car: CarState): boolean {
   return !car.isOnTrack || car.statusCode === 3;
 }
 
-export type PitIndicator = 'in-pit' | 'recent' | null;
+/** 'pit' = on pit road now; 'out' = on the out lap (see data/model/outLaps.ts). */
+export type PitIndicator = 'pit' | 'out' | null;
 
-/** How many laps a stop counts as "recent" for the row indicator. */
-const RECENT_PIT_LAPS = 2;
+export const PIT_INDICATOR_LABELS: Record<'pit' | 'out', { short: string; title: string }> = {
+  pit: { short: 'PIT', title: 'On pit road' },
+  out: { short: 'OUT', title: "Out lap: left pit road and hasn't completed a lap yet" },
+};
 
 /** Live-session pit indicator. Not shown once the session is finished, or for cars out of it. */
-export function pitIndicator(car: CarState, sessionFinished: boolean): PitIndicator {
+export function pitIndicator(
+  car: CarState,
+  sessionFinished: boolean,
+  onOutLap: boolean,
+): PitIndicator {
   if (sessionFinished || isOut(car)) return null;
   const last: PitStop | undefined = car.pitStops.at(-1);
   if (!last) return null;
-  if (last.inTime !== null && last.outTime === null) return 'in-pit';
-  return car.lapsCompleted - last.lap < RECENT_PIT_LAPS ? 'recent' : null;
+  if (last.inTime !== null && last.outTime === null) return 'pit';
+  return onOutLap ? 'out' : null;
 }
 
 /** Stop count and, unless compact, the last pit lap as "·L215" (no spaces, to keep it tight). */

@@ -9,8 +9,17 @@ import { useLiveSession } from './hooks/useLiveSession.ts';
 import { useApplyTheme, usePreferences } from './hooks/usePreferences.ts';
 
 export default function App() {
-  const { session, status, lastChanged, nextPollAt, events, positionChanges, updateId, replay } =
-    useLiveSession();
+  const {
+    session,
+    status,
+    lastChanged,
+    nextPollAt,
+    events,
+    positionChanges,
+    updateId,
+    outLaps,
+    replay,
+  } = useLiveSession();
   const [prefs] = usePreferences();
   useApplyTheme();
 
@@ -33,6 +42,7 @@ export default function App() {
             replayLabel={replay && `Replay · ${replay.speed}×`}
             positionChanges={positionChanges}
             updateId={updateId}
+            outLaps={outLaps}
           />
           {prefs.showTicker && <EventTicker events={events} />}
         </>

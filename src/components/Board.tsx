@@ -17,6 +17,7 @@ interface Props {
   replayLabel: string | null;
   positionChanges: Map<string, number> | null;
   updateId: number;
+  outLaps: ReadonlySet<string>;
 }
 
 /**
@@ -24,7 +25,14 @@ interface Props {
  * rows are fitted to the height shared by the banner and the table (the header's height doesn't
  * depend on row size, so there's no feedback loop).
  */
-export function Board({ session, replayLabel, positionChanges, updateId, ...status }: Props) {
+export function Board({
+  session,
+  replayLabel,
+  positionChanges,
+  updateId,
+  outLaps,
+  ...status
+}: Props) {
   const [prefs, updatePrefs] = usePreferences();
   const hidden = useMemo(() => new Set(prefs.hiddenColumns), [prefs.hiddenColumns]);
   const favorites = useMemo(() => new Set(prefs.favorites), [prefs.favorites]);
@@ -75,6 +83,7 @@ export function Board({ session, replayLabel, positionChanges, updateId, ...stat
           favorites={favorites}
           pinFavorites={prefs.pinFavorites}
           onToggleFavorite={toggleFavorite}
+          outLaps={outLaps}
         />
       </main>
     </div>

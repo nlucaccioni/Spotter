@@ -57,19 +57,20 @@ describe('format helpers', () => {
 });
 
 describe('pitIndicator', () => {
-  it('shows a car on pit road, then a recent stop, then nothing', () => {
-    expect(pitIndicator(withStops(50, [stop(50, 2000, null)]), false)).toBe('in-pit');
-    expect(pitIndicator(withStops(51, [stop(50, 2000, 2035)]), false)).toBe('recent');
-    expect(pitIndicator(withStops(52, [stop(50, 2000, 2035)]), false)).toBeNull();
-    expect(pitIndicator(withStops(52, []), false)).toBeNull();
+  it('shows PIT on pit road, OUT on the out lap, then nothing', () => {
+    expect(pitIndicator(withStops(50, [stop(50, 2000, null)]), false, false)).toBe('pit');
+    expect(pitIndicator(withStops(51, [stop(50, 2000, 2035)]), false, true)).toBe('out');
+    expect(pitIndicator(withStops(52, [stop(50, 2000, 2035)]), false, false)).toBeNull();
+    expect(pitIndicator(withStops(52, []), false, false)).toBeNull();
   });
 
   it('shows nothing for a car that is out of the race', () => {
     const out = { ...withStops(200, [stop(112, 4400, null)]), statusCode: 3, isOnTrack: false };
-    expect(pitIndicator(out, false)).toBeNull();
+    expect(pitIndicator(out, false, false)).toBeNull();
   });
 
   it('shows nothing once the session is finished', () => {
-    expect(pitIndicator(withStops(50, [stop(50, 2000, null)]), true)).toBeNull();
+    expect(pitIndicator(withStops(50, [stop(50, 2000, null)]), true, false)).toBeNull();
+    expect(pitIndicator(withStops(51, [stop(50, 2000, 2035)]), true, true)).toBeNull();
   });
 });

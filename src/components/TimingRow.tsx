@@ -10,6 +10,7 @@ import {
   formatPits,
   formatStatus,
   isOut,
+  PIT_INDICATOR_LABELS,
   pitIndicator,
 } from './board/format.ts';
 import type { ColumnDef, NameFormat } from './board/layout.ts';
@@ -26,6 +27,8 @@ interface Props {
   /** Changes on every update, so the flash replays even for repeat moves. */
   updateId: number;
   favorite: boolean;
+  /** On the out lap (tracked across snapshots by the session history). */
+  onOutLap: boolean;
   /** Called with the driver's favorite key on double-click. */
   onToggleFavorite: (key: string) => void;
   favoriteKey: string;
@@ -40,6 +43,7 @@ export const TimingRow = memo(function TimingRow({
   positionChange,
   updateId,
   favorite,
+  onOutLap,
   onToggleFavorite,
   favoriteKey,
 }: Props) {
@@ -76,6 +80,7 @@ export const TimingRow = memo(function TimingRow({
           sessionBest={sessionBest}
           sessionFinished={sessionFinished}
           favorite={favorite}
+          onOutLap={onOutLap}
         />
       ))}
     </tr>
@@ -89,7 +94,11 @@ function Cell({
   sessionBest,
   sessionFinished,
   favorite,
-}: Pick<Props, 'car' | 'nameFormat' | 'sessionBest' | 'sessionFinished' | 'favorite'> & {
+  onOutLap,
+}: Pick<
+  Props,
+  'car' | 'nameFormat' | 'sessionBest' | 'sessionFinished' | 'favorite' | 'onOutLap'
+> & {
   column: ColumnDef;
 }) {
   const align = `cell--${column.align}`;
@@ -196,7 +205,7 @@ function Cell({
       return <td className={`${align} cell--mono`}>{car.lapsLed || ''}</td>;
 
     case 'pits': {
-      const indicator = pitIndicator(car, sessionFinished);
+      const indicator = pitIndicator(car, sessionFinished, onOutLap);
       const { count, last } = formatPits(car, indicator !== null);
       const lastStop = car.pitStops.at(-1);
       return (
@@ -207,9 +216,9 @@ function Cell({
           {indicator && (
             <span
               className={`badge badge--pit badge--pit-${indicator}`}
-              title={indicator === 'in-pit' ? 'On pit road' : 'Pitted in the last 2 laps'}
+              title={PIT_INDICATOR_LABELS[indicator].title}
             >
-              {indicator === 'in-pit' ? 'IN' : 'PIT'}
+              {PIT_INDICATOR_LABELS[indicator].short}
             </span>
           )}
           {count}

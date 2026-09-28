@@ -75,3 +75,11 @@ Fixture: `tests/fixtures/cup-2026-kansas-final.json` (race_id 5628, 267/267 laps
     time and a zero pit-out time).
   - Also to confirm live: whether `is_on_track` goes false while a car is on pit road. The board
     dims rows with `is_on_track: false`, so if it does, rows would dim during stops.
+
+### 2026-09-28 — Lap count at pit exit (from the Kansas Timing71 replay)
+
+Of 196 observed pit exits, 134 left pit road with the lap count already one past the stop lap
+(the car crossed the timing line on pit road), 60 left with it unchanged (exited before the
+line), and 2 with +2. So "out lap" can't be derived from a single snapshot; the board records
+each car's lap count when it's seen leaving pit road and shows OUT until that count goes up
+(`src/data/model/outLaps.ts`). Worth confirming against NASCAR's own feed during a live race.

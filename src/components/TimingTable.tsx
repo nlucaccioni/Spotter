@@ -15,6 +15,7 @@ interface Props {
   favorites: ReadonlySet<string>;
   pinFavorites: boolean;
   onToggleFavorite: (key: string) => void;
+  outLaps: ReadonlySet<string>;
 }
 
 export function TimingTable({
@@ -25,6 +26,7 @@ export function TimingTable({
   favorites,
   pinFavorites,
   onToggleFavorite,
+  outLaps,
 }: Props) {
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
 
@@ -96,6 +98,7 @@ export function TimingTable({
                 positionChange={positionChanges?.get(car.carNumber) ?? 0}
                 updateId={updateId}
                 favorite={favorites.has(favoriteKey(car))}
+                onOutLap={outLaps.has(car.carNumber)}
                 favoriteKey={favoriteKey(car)}
                 onToggleFavorite={onToggleFavorite}
               />

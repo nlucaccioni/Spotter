@@ -63,6 +63,8 @@ function createStore() {
   };
 }
 
+const NO_CARS: ReadonlySet<string> = new Set();
+
 let store: ReturnType<typeof createStore> | null = null;
 const getStore = () => (store ??= createStore());
 const subscribe = (onChange: () => void) => getStore().subscribe(onChange);
@@ -80,6 +82,7 @@ export function useLiveSession() {
     events: history?.events ?? [],
     positionChanges: history?.positionChanges ?? null,
     updateId: history?.updateId ?? 0,
+    outLaps: history?.outLaps ?? NO_CARS,
     replay,
   };
 }
