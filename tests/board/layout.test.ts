@@ -84,3 +84,11 @@ describe('computeBoardLayout — driver name length', () => {
     expect(computeBoardLayout(360, 600, 40).nameFormat).not.toBe('full');
   });
 });
+
+describe('computeBoardLayout — extra rows', () => {
+  it('fits extra row-sized elements (the flag banner) alongside the table', () => {
+    const withBanner = computeBoardLayout(1080, 1700, 40, 1);
+    expect(withBanner.rowHeightPx).toBe(Math.floor(1700 / 42));
+    expect(withBanner.rowHeightPx * 42).toBeLessThanOrEqual(1700);
+  });
+});

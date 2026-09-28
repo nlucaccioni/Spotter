@@ -1,13 +1,23 @@
-/* ---- Flag banner: readable from across the room ---- */
+/* ---- Board: banner + header + table, sized together (see Board.tsx) ---- */
+
+.board {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---- Flag banner: one table row tall; the full-width color carries across the room ---- */
 
 .flag-banner {
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 0 16px;
-  min-height: clamp(44px, 5vh, 88px);
-  font-size: clamp(1.25rem, 2.6vh, 2.5rem);
+  padding: 0 12px;
+  height: var(--row-h, 32px);
+  font-size: var(--row-font, 16px);
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -49,13 +59,14 @@
   color: #111;
   background-color: #f5f5f5;
   background-image: repeating-conic-gradient(#111 0 25%, #f5f5f5 0 50%);
-  background-size: 24px 24px;
+  /* Two checks per banner height. */
+  background-size: var(--row-h, 32px) var(--row-h, 32px);
 }
 
 .flag-banner--checkered > span {
   background: #f5f5f5;
-  padding: 0 0.35em;
-  border-radius: 4px;
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
 }
 
 .flag-banner--unknown {
@@ -112,6 +123,7 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  font-size: var(--row-font, 16px);
 }
 
 .timing--scroll {

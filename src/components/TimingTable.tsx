@@ -1,8 +1,7 @@
-import { useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { Session } from '../data/model/types.ts';
-import { useElementSize } from '../hooks/useElementSize.ts';
 import { useRowReorderAnimation } from '../hooks/useRowReorderAnimation.ts';
-import { computeBoardLayout } from './board/layout.ts';
+import type { BoardLayout } from './board/layout.ts';
 import { DEFAULT_SORT, nextSort, sortCars, type SortState } from './board/sort.ts';
 import { TimingRow } from './TimingRow.tsx';
 
@@ -10,17 +9,14 @@ interface Props {
   session: Session;
   positionChanges: Map<string, number> | null;
   updateId: number;
+  /** Computed by Board, which sizes the flag banner and table rows together. */
+  layout: BoardLayout | null;
 }
 
-export function TimingTable({ session, positionChanges, updateId }: Props) {
-  const [containerRef, size] = useElementSize<HTMLDivElement>();
+export function TimingTable({ session, positionChanges, updateId, layout }: Props) {
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
 
   const { cars } = session;
-  const layout = useMemo(
-    () => size && computeBoardLayout(size.width, size.height, cars.length),
-    [size, cars.length],
-  );
   const sorted = useMemo(() => sortCars(cars, sort), [cars, sort]);
 
   // Rows slide to their new place when the order changes (position swaps or re-sorting).
@@ -32,18 +28,7 @@ export function TimingTable({ session, positionChanges, updateId }: Props) {
   const sessionFinished = session.flag.kind === 'checkered';
 
   return (
-    <div
-      ref={containerRef}
-      className={`timing${layout?.scroll ? ' timing--scroll' : ''}`}
-      style={
-        layout
-          ? ({
-              '--row-h': `${layout.rowHeightPx}px`,
-              fontSize: `${layout.fontSizePx}px`,
-            } as CSSProperties)
-          : undefined
-      }
-    >
+    <div className={`timing${layout?.scroll ? ' timing--scroll' : ''}`}>
       {layout && (
         <table className="timing-table">
           <colgroup>

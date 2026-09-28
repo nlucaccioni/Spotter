@@ -104,11 +104,18 @@ export interface BoardLayout {
 
 /**
  * @param width  available width in CSS px
- * @param height available height in CSS px for the table, including its header row
+ * @param height available height in CSS px for the table (including its header row) plus any
+ *               extra rows
  * @param carCount number of rows in the field
+ * @param extraRows other elements sized as one row each, e.g. the flag banner
  */
-export function computeBoardLayout(width: number, height: number, carCount: number): BoardLayout {
-  const rows = Math.max(1, carCount) + 1; // + header row
+export function computeBoardLayout(
+  width: number,
+  height: number,
+  carCount: number,
+  extraRows = 0,
+): BoardLayout {
+  const rows = Math.max(1, carCount) + 1 + extraRows; // + table header row
   const fitted = Math.floor(height / rows);
   const scroll = fitted < LIMITS.minRowPx;
   const rowHeightPx = clamp(fitted, LIMITS.minRowPx, LIMITS.maxRowPx);

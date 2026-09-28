@@ -1,8 +1,6 @@
+import { Board } from './components/Board.tsx';
 import { ConnectionStatus } from './components/ConnectionStatus.tsx';
 import { EventTicker } from './components/EventTicker.tsx';
-import { FlagBanner } from './components/FlagBanner.tsx';
-import { SessionHeader } from './components/SessionHeader.tsx';
-import { TimingTable } from './components/TimingTable.tsx';
 import { useLiveSession } from './hooks/useLiveSession.ts';
 
 export default function App() {
@@ -13,22 +11,15 @@ export default function App() {
     <div className="app">
       {session ? (
         <>
-          <FlagBanner
-            flag={session.flag}
-            lap={session.lap}
-            lapsInRace={session.lapsInRace}
-            lapsToGo={session.lapsToGo}
-          />
-          <SessionHeader
+          <Board
             session={session}
             status={status}
             lastChanged={lastChanged}
             nextPollAt={nextPollAt}
             replayLabel={replay && `Replay · ${replay.speed}×`}
+            positionChanges={positionChanges}
+            updateId={updateId}
           />
-          <main className="app__main">
-            <TimingTable session={session} positionChanges={positionChanges} updateId={updateId} />
-          </main>
           <EventTicker events={events} />
         </>
       ) : (

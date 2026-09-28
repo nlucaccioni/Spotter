@@ -5,7 +5,7 @@ export interface Size {
   height: number;
 }
 
-/** Tracks an element's content-box size. Attach the returned ref callback to the element. */
+/** Tracks an element's border-box size. Attach the returned ref callback to the element. */
 export function useElementSize<T extends Element>(): [(node: T | null) => void, Size | null] {
   const [size, setSize] = useState<Size | null>(null);
 
@@ -13,7 +13,9 @@ export function useElementSize<T extends Element>(): [(node: T | null) => void, 
     if (!node) return;
     const observer = new ResizeObserver(([entry]) => {
       if (!entry) return;
-      const { width, height } = entry.contentRect;
+      const box = entry.borderBoxSize?.[0];
+      const width = box ? box.inlineSize : entry.contentRect.width;
+      const height = box ? box.blockSize : entry.contentRect.height;
       setSize((prev) =>
         prev && prev.width === width && prev.height === height ? prev : { width, height },
       );
