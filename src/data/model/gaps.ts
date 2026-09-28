@@ -20,7 +20,8 @@ export function gapToLeader(delta: number | null, isLeader: boolean): Gap {
  * feed (official intervals) is integrated:
  * - both on the lead lap: difference in seconds;
  * - different laps: difference in laps;
- * - same lap but both lapped: unknown (the feed gives no time for lapped cars).
+ * - same lap but both lapped: unknown (the feed gives no time for lapped cars);
+ * - a smaller delta than the car ahead: unknown (inconsistent data, e.g. mid pit cycle).
  */
 export function intervalToCarAhead(
   delta: number | null,
@@ -31,8 +32,8 @@ export function intervalToCarAhead(
 
   const laps = lapsDown(delta) - lapsDown(aheadDelta);
   if (laps > 0) return { kind: 'laps', laps };
-  if (laps < 0 || lapsDown(delta) > 0) return { kind: 'unknown' };
-  return { kind: 'time', seconds: roundMs(Math.max(0, delta - aheadDelta)) };
+  if (laps < 0 || lapsDown(delta) > 0 || delta < aheadDelta) return { kind: 'unknown' };
+  return { kind: 'time', seconds: roundMs(delta - aheadDelta) };
 }
 
 export function formatGap(gap: Gap): string {

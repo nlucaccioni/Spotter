@@ -49,8 +49,9 @@ describe('intervalToCarAhead', () => {
     expect(intervalToCarAhead(1, -1)).toEqual({ kind: 'unknown' });
   });
 
-  it('never reports a negative time', () => {
-    expect(intervalToCarAhead(2.0, 2.5)).toEqual({ kind: 'time', seconds: 0 });
+  it('is unknown rather than negative when the car ahead has a bigger gap', () => {
+    expect(intervalToCarAhead(2.0, 2.5)).toEqual({ kind: 'unknown' });
+    expect(intervalToCarAhead(2.5, 2.5)).toEqual({ kind: 'time', seconds: 0 });
   });
 });
 
