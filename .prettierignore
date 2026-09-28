@@ -3,3 +3,6 @@ coverage
 node_modules
 package-lock.json
 tests/fixtures
+
+# Local replay downloads (git-ignored via .git/info/exclude; never reformat them)
+/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]-[0-9][0-9] */

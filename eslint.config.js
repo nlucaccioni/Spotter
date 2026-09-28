@@ -22,7 +22,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['vite.config.ts', 'eslint.config.js'],
+    files: ['vite.config.ts', 'vite.replays.ts', 'eslint.config.js'],
     languageOptions: { globals: globals.node },
   },
   // Must stay last: turns off stylistic rules that would fight Prettier.
