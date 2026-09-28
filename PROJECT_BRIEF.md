@@ -59,20 +59,20 @@ The feed always reflects whatever single session NASCAR currently has live (any 
 
 **Top-level fields (observed):**
 
-| Field                                                  | Notes                                                            |
-| ------------------------------------------------------ | ---------------------------------------------------------------- |
-| `lap_number`, `laps_in_race`, `laps_to_go`             | Race progress                                                    |
-| `elapsed_time`                                         | Seconds since session start                                      |
-| `flag_state`                                           | Numeric. See §3.4                                                |
-| `race_id`, `run_id`, `run_name`                        | e.g. `run_name: "Hollywood Casino 400"`                          |
-| `series_id`                                            | 1 = Cup. Others to confirm (Xfinity/O'Reilly, Trucks)            |
-| `run_type`                                             | 3 observed for a race. Others (practice/qualifying) to confirm   |
-| `track_id`, `track_name`, `track_length`               | Length in miles                                                  |
-| `time_of_day_os`                                       | ISO timestamp of the feed update. Use it for staleness detection |
-| `number_of_caution_segments`, `number_of_caution_laps` |                                                                  |
-| `number_of_lead_changes`, `number_of_leaders`          |                                                                  |
-| `stage`                                                | `{ stage_num, finish_at_lap, laps_in_stage }`                    |
-| `vehicles`                                             | Array, see below                                                 |
+| Field                                                  | Notes                                                               |
+| ------------------------------------------------------ | ------------------------------------------------------------------- |
+| `lap_number`, `laps_in_race`, `laps_to_go`             | Race progress                                                       |
+| `elapsed_time`                                         | Seconds since session start                                         |
+| `flag_state`                                           | Numeric. See §3.4                                                   |
+| `race_id`, `run_id`, `run_name`                        | e.g. `run_name: "Hollywood Casino 400"`                             |
+| `series_id`                                            | 1 = Cup, 2 = O'Reilly Auto Parts Series, 3 = Craftsman Truck Series |
+| `run_type`                                             | 3 observed for a race. Others (practice/qualifying) to confirm      |
+| `track_id`, `track_name`, `track_length`               | Length in miles                                                     |
+| `time_of_day_os`                                       | ISO timestamp of the feed update. Use it for staleness detection    |
+| `number_of_caution_segments`, `number_of_caution_laps` |                                                                     |
+| `number_of_lead_changes`, `number_of_leaders`          |                                                                     |
+| `stage`                                                | `{ stage_num, finish_at_lap, laps_in_stage }`                       |
+| `vehicles`                                             | Array, see below                                                    |
 
 **Per-vehicle fields (observed):**
 
@@ -135,6 +135,8 @@ NASCAR publishes no rate limit, and there's no uptime guarantee. Be conservative
 - **Exponential backoff on errors** (network, 403, 429, 5xx): 10 s → 20 s → 40 s … capped at 5 min. Show a clear "connection issue" state in the UI.
 - Never run more than one in-flight request per feed. Skip a tick if the previous request hasn't finished.
 - Only one polling loop per tab, even if multiple components need the data.
+
+**As implemented (milestone 3):** "several minutes" of unchanged content = 3 min. Requests time out after 15 s. Jitter also applies to idle and backoff delays, and the 3 s floor applies after jitter. Returning to a visible tab polls immediately, even during error backoff. Idle detection compares the feed with `time_of_day_os` and `time_of_day` removed.
 
 ### 3.4 Flag states
 
@@ -297,7 +299,7 @@ Pos · ± (position change since start or last N laps) · Car # · Driver (with 
 
 1. **Scaffold:** Vite + React + TS, ESLint/Prettier, Vitest, GitHub Actions Pages deploy, README. (CNAME dropped until a custom domain exists.) ✅ Done 2026-09-27.
 2. **Data layer:** zod schema, parser, names, gaps, flags, and tests against the fixture. ✅ Done 2026-09-27. The parser is pure and returns `issues` (dropped rows) instead of logging; logging, including the dev-only log of distinct `flag_state` values (§3.4), happens where snapshots arrive, in milestone 3.
-3. **Poller:** polling engine per §3.3 plus the `useLiveSession` hook and connection status.
+3. **Poller:** polling engine per §3.3 plus the `useLiveSession` hook and connection status. ✅ Done 2026-09-28. The live-feed wiring lives in `src/data/liveSession.ts`.
 4. **Timing board v1:** portrait-first layout per §5.1 (whole field fits, column priority), header, flag banner, table, row highlights, sorting.
 5. **Replay mode + diff events:** event ticker, position-change flashes.
 6. **Preferences + display mode:** favorites, column toggles, theme toggle (localStorage), fullscreen, cursor hide, wake lock.
