@@ -33,7 +33,7 @@ export function formatManufacturer(name: string): string {
 }
 
 export function formatStatus(car: CarState): string {
-  if (car.statusCode === 1) return car.isOnTrack ? 'Running' : 'Off track';
+  if (car.statusCode === 1) return car.isOnTrack ? 'Run' : 'Off track';
   if (car.statusCode === 3) return 'Out';
   return car.statusCode === null ? '—' : `Status ${car.statusCode}`;
 }

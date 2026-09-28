@@ -48,7 +48,7 @@ describe('format helpers', () => {
   });
 
   it('describes status and marks cars out of the race', () => {
-    expect(formatStatus(larson)).toBe('Running');
+    expect(formatStatus(larson)).toBe('Run');
     const out = result.session.cars.find((c) => c.carNumber === '4')!;
     expect(formatStatus(out)).toBe('Out');
     expect(isOut(out)).toBe(true);
