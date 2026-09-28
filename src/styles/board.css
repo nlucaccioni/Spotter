@@ -354,3 +354,8 @@
   font-size: 0.85em;
   text-transform: uppercase;
 }
+
+/* Last pit lap sits right against the stop count, muted so the count reads on its own. */
+.pits__last {
+  color: var(--text-muted);
+}

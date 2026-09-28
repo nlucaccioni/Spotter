@@ -42,9 +42,9 @@ describe('format helpers', () => {
   });
 
   it('formats pit stops as count and last pit lap', () => {
-    expect(formatPits(larson)).toBe('5 · L215');
-    expect(formatPits(withStops(10, []))).toBe('0');
-    expect(formatPits(larson, true)).toBe('5');
+    expect(formatPits(larson)).toEqual({ count: '5', last: '·L215' });
+    expect(formatPits(withStops(10, []))).toEqual({ count: '0', last: null });
+    expect(formatPits(larson, true)).toEqual({ count: '5', last: null });
   });
 
   it('describes status and marks cars out of the race', () => {

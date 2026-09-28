@@ -62,7 +62,7 @@ export const COLUMNS: readonly ColumnDef[] = [
     label: 'Pits',
     title: 'Pit stops (count, last pit lap)',
     priority: 2,
-    widthEm: 5.6,
+    widthEm: 4.4,
     align: 'right',
   },
   { id: 'status', label: 'Status', title: 'Status', priority: 3, widthEm: 4.8, align: 'left' },

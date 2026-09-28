@@ -56,8 +56,11 @@ export function pitIndicator(car: CarState, sessionFinished: boolean): PitIndica
   return car.lapsCompleted - last.lap < RECENT_PIT_LAPS ? 'recent' : null;
 }
 
-export function formatPits(car: CarState, compact = false): string {
+/** Stop count and, unless compact, the last pit lap as "·L215" (no spaces, to keep it tight). */
+export function formatPits(car: CarState, compact = false): { count: string; last: string | null } {
   const last = car.pitStops.at(-1);
-  if (!last) return '0';
-  return compact ? String(car.pitStops.length) : `${car.pitStops.length} · L${last.lap}`;
+  return {
+    count: String(car.pitStops.length),
+    last: last && !compact ? `·L${last.lap}` : null,
+  };
 }

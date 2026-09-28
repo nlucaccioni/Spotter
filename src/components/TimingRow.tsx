@@ -176,14 +176,20 @@ function Cell({
 
     case 'pits': {
       const indicator = pitIndicator(car, sessionFinished);
+      const { count, last } = formatPits(car, indicator !== null);
+      const lastStop = car.pitStops.at(-1);
       return (
-        <td className={`${align} cell--mono`}>
+        <td
+          className={`${align} cell--mono`}
+          title={lastStop ? `${count} stops, last on lap ${lastStop.lap}` : 'No stops'}
+        >
           {indicator && (
             <span className={`badge badge--pit badge--pit-${indicator}`}>
               {indicator === 'in-pit' ? 'IN' : 'PIT'}
             </span>
           )}
-          {formatPits(car, indicator !== null)}
+          {count}
+          {last && <span className="pits__last">{last}</span>}
         </td>
       );
     }
