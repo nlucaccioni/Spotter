@@ -23,6 +23,29 @@ npm run build        # type-check + production build into dist/
 npm run preview      # serve the production build locally
 ```
 
+### Replaying a recorded race (dev only)
+
+Download a session replay from Timing71 and drop the unzipped folder (named like
+`2026-09-27 19-07 NASCAR Cup Series - Hollywood Casino 400 - Race`) into the project root.
+Then run `npm run dev` and open:
+
+```
+http://localhost:5173/?replay=<folder name>&speed=10&lap=200
+```
+
+- `speed`: playback speed (default 10×; recordings have one frame per ~5 s).
+- `lap`: fast-forward to this leader lap first.
+- `http://localhost:5173/__replays` lists the folders the dev server can see.
+
+Replay folders are third-party data and must never be committed. Add them to your local
+`.git/info/exclude` (not `.gitignore`), for example:
+
+```
+/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9] [0-9][0-9]-[0-9][0-9] */
+```
+
+The replay code is only reachable from dev builds and is not included in production bundles.
+
 ## Deployment
 
 Every push to `main` runs lint, format check, tests and build, then deploys `dist/` to GitHub
