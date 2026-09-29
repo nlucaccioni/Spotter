@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { createDelayBuffer, type Timed } from '../data/delayBuffer.ts';
 import { createLiveSessionPoller, type LiveSnapshot } from '../data/liveSession.ts';
 import { documentVisibility, type PollerState } from '../data/polling/poller.ts';
 import { createSessionHistory, type HistoryUpdate } from '../data/sessionHistory.ts';
@@ -11,12 +12,19 @@ import {
 } from '../dev/replayParams.ts';
 
 // One poller per tab, shared by every component that uses the hook. It starts with the first
-// subscriber and stops when the last one unmounts. Each new snapshot is diffed against the
-// previous one to produce events and position changes.
+// subscriber and stops when the last one unmounts. New snapshots pass through the TV-delay
+// buffer; each one shown is diffed against the previous one to produce events and position
+// changes, so events, flashes and slides are delayed along with the data.
 
 interface StoreState {
+  /** Real-time polling state (status, errors); never delayed. */
   poll: PollerState<LiveSnapshot>;
+  /** The snapshot on screen, after the TV delay. */
+  shown: Timed<LiveSnapshot> | null;
   history: HistoryUpdate | null;
+  /** When the next held snapshot is due, or null. */
+  nextDueAt: number | null;
+  delaySeconds: number;
 }
 
 // Dev builds only: `?replay=<folder>` swaps the network fetcher for a recorded session.
@@ -35,24 +43,50 @@ function createStore() {
     }),
   });
   const history = createSessionHistory();
+  const buffer = createDelayBuffer<LiveSnapshot>();
   const listeners = new Set<() => void>();
   let lastData: LiveSnapshot | null = null;
-  let state: StoreState = { poll: poller.getState(), history: null };
+  let delayMs = 0;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let state: StoreState = {
+    poll: poller.getState(),
+    shown: null,
+    history: null,
+    nextDueAt: null,
+    delaySeconds: 0,
+  };
   let subscribers = 0;
 
+  /** Shows whatever is due, and schedules the next release. */
+  function flush(poll: PollerState<LiveSnapshot> = state.poll) {
+    if (timer !== undefined) clearTimeout(timer);
+    timer = undefined;
+    const due = buffer.release(Date.now(), delayMs);
+    const shown = due ?? state.shown;
+    const update = due ? history.push(due.value.session, due.at) : state.history;
+    const nextDueAt = buffer.nextDueAt(delayMs);
+    if (nextDueAt !== null) timer = setTimeout(() => flush(), Math.max(0, nextDueAt - Date.now()));
+    state = { poll, shown, history: update, nextDueAt, delaySeconds: delayMs / 1000 };
+    for (const listener of listeners) listener();
+  }
+
   poller.subscribe((poll) => {
-    let update = state.history;
     if (poll.data && poll.data !== lastData) {
       lastData = poll.data;
-      update = history.push(poll.data.session, poll.lastSuccessAt ?? Date.now());
+      buffer.push(poll.data, poll.lastSuccessAt ?? Date.now());
     }
-    state = { poll, history: update };
-    for (const listener of listeners) listener();
+    flush(poll);
   });
 
   return {
     getState: () => state,
     refresh: () => poller.refresh(),
+    setDelaySeconds(seconds: number) {
+      const next = Math.max(0, seconds) * 1000;
+      if (next === delayMs) return;
+      delayMs = next;
+      flush();
+    },
     subscribe(onChange: () => void) {
       listeners.add(onChange);
       if (subscribers++ === 0) poller.start();
@@ -71,14 +105,26 @@ const getStore = () => (store ??= createStore());
 const subscribe = (onChange: () => void) => getStore().subscribe(onChange);
 const getSnapshot = () => getStore().getState();
 
+/** Sets the TV delay; the board then shows each update this many seconds after it arrives. */
+export function setLiveDelaySeconds(seconds: number) {
+  getStore().setDelaySeconds(seconds);
+}
+
 export function useLiveSession() {
-  const { poll, history } = useSyncExternalStore(subscribe, getSnapshot);
+  const { poll, shown, history, nextDueAt, delaySeconds } = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+  );
   return {
-    session: poll.data?.session ?? null,
+    session: shown?.value.session ?? null,
     status: poll.status,
     error: poll.error,
-    lastUpdated: poll.lastSuccessAt,
+    /** When the data on screen arrived (so with a TV delay, it's that long ago). */
+    lastUpdated: shown?.at ?? null,
     lastChanged: poll.lastChangeAt,
+    delaySeconds,
+    /** Data has arrived but is being held for the TV delay: when the first update is due. */
+    holdingUntil: shown === null ? nextDueAt : null,
     nextPollAt: poll.nextPollAt,
     events: history?.events ?? [],
     positionChanges: history?.positionChanges ?? null,
