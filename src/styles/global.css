@@ -68,6 +68,8 @@
   --mfr-frd-text: #ffffff;
   --mfr-tyt: #c8102e;
   --mfr-tyt-text: #ffffff;
+  /* Plate behind car-number graphics in the light theme only. */
+  --badge-plate: #cfcfcf;
   --overlay: rgba(0, 0, 0, 0.3);
   --stale-bg: #fff1c2;
   --stale-text: #5c4400;

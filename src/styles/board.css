@@ -542,19 +542,19 @@
   cursor: pointer;
 }
 
-/* ---- Manufacturer chips (brand colors only; the name is always shown) ---- */
+/* ---- Manufacturer chips: small, brand colors only (no marks); the name is always shown ---- */
 
 .mfr-chip {
   display: inline-block;
-  min-width: 3.9em;
-  padding: 0.2em 0.45em;
-  border-radius: 0.3em;
+  padding: 0.14em 0.36em;
+  border-radius: 0.25em;
   background: var(--badge-bg);
   color: var(--text);
-  font-size: 0.78em;
+  font-size: 0.64em;
   font-weight: 700;
+  letter-spacing: 0.02em;
   line-height: 1;
-  text-align: center;
+  vertical-align: 0.15em;
 }
 
 .mfr-chip--chv {
@@ -570,6 +570,14 @@
 .mfr-chip--tyt {
   background: var(--mfr-tyt);
   color: var(--mfr-tyt-text);
+}
+
+/* Light theme: frame the car-number graphics, since white numbers (e.g. #24) vanish on the
+   light background. The dark theme shows them unframed. */
+:root[data-theme='light'] .car-badge {
+  padding: 0.06em 0.18em;
+  border-radius: 0.2em;
+  background: var(--badge-plate);
 }
 
 /* ---- Opt-in car-number graphics (hotlinked from NASCAR's CDN) ---- */
