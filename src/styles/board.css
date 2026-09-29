@@ -236,6 +236,10 @@
   font-size: 0.85em;
 }
 
+.cell--change {
+  font-size: 0.7em;
+}
+
 .cell--pos {
   font-weight: 700;
 }

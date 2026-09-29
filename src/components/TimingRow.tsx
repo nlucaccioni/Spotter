@@ -113,7 +113,7 @@ function Cell({
     case 'change': {
       const g = car.positionsGained;
       const tone = g === null || g === 0 ? '' : g > 0 ? ' cell--up' : ' cell--down';
-      return <td className={`${align} cell--mono${tone}`}>{formatChange(g)}</td>;
+      return <td className={`${align} cell--mono cell--change${tone}`}>{formatChange(g)}</td>;
     }
 
     case 'car':
