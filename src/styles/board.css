@@ -440,16 +440,6 @@
   outline-offset: 2px;
 }
 
-.control-button svg {
-  width: 15px;
-  height: 15px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 /* ---- Settings drawer ---- */
 
 .drawer-backdrop {
@@ -578,4 +568,38 @@
 .mfr-chip--tyt {
   background: var(--mfr-tyt);
   color: var(--mfr-tyt-text);
+}
+
+/* ---- Opt-in car-number graphics (hotlinked from NASCAR's CDN) ---- */
+
+.car-badge {
+  display: inline-block;
+  height: 1.25em;
+  width: auto;
+  vertical-align: middle;
+}
+
+/* Dark-colored numbers (e.g. black or navy) vanish on the dark theme, so sit them on a light
+   plate there, like a TV graphic. The light theme needs no plate. */
+:root:not([data-theme='light']) .car-badge {
+  padding: 0.06em 0.18em;
+  border-radius: 0.2em;
+  background: #e6e9ec;
+}
+
+/* ---- Footer clock ---- */
+
+.footer-clock {
+  display: flex;
+  flex: none;
+  gap: 14px;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.footer-clock__label {
+  font-family: var(--font-ui);
+  color: var(--text-muted);
 }

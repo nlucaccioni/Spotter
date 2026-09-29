@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Board } from './components/Board.tsx';
 import { ConnectionStatus } from './components/ConnectionStatus.tsx';
 import { Controls } from './components/Controls.tsx';
+import { FooterClock } from './components/FooterClock.tsx';
 import { EventTicker } from './components/EventTicker.tsx';
 import { SettingsDrawer } from './components/SettingsDrawer.tsx';
 import { useDisplayMode } from './hooks/useDisplayMode.ts';
@@ -14,6 +15,7 @@ export default function App() {
     status,
     lastChanged,
     nextPollAt,
+    lastUpdated,
     events,
     positionChanges,
     updateId,
@@ -58,9 +60,10 @@ export default function App() {
         </main>
       )}
       <footer className="app__footer">
-        <span>
+        <span className="app__disclaimer">
           Unofficial fan project. Not affiliated with or endorsed by NASCAR. Data © NASCAR.
         </span>
+        <FooterClock lastUpdated={lastUpdated} />
         {/* In the footer so they never cover timing data; they fade out when the mouse is still. */}
         <Controls
           hidden={idle}

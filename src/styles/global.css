@@ -114,6 +114,13 @@ body {
   padding: 16px;
 }
 
+.app__disclaimer {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .app__footer {
   display: flex;
   align-items: center;
