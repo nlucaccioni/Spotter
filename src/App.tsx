@@ -64,9 +64,8 @@ export default function App() {
           Unofficial fan project. Not affiliated with or endorsed by NASCAR. Data © NASCAR.
         </span>
         <FooterClock lastUpdated={lastUpdated} />
-        {/* In the footer so they never cover timing data; they fade out when the mouse is still. */}
+        {/* In the footer so they never cover timing data. */}
         <Controls
-          hidden={idle}
           fullscreen={display.fullscreen}
           canFullscreen={display.canFullscreen}
           onToggleFullscreen={display.toggleFullscreen}

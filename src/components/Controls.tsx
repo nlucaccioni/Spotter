@@ -1,8 +1,6 @@
 import { Maximize, Minimize, SlidersHorizontal } from 'lucide-react';
 
 interface Props {
-  /** Fade out (display mode: the pointer has been still for a while). */
-  hidden: boolean;
   fullscreen: boolean;
   canFullscreen: boolean;
   onToggleFullscreen: () => void;
@@ -11,16 +9,10 @@ interface Props {
 
 const ICON = { size: 15, strokeWidth: 2, 'aria-hidden': true } as const;
 
-/** Footer controls; hidden until the mouse moves (PROJECT_BRIEF.md §5.1). */
-export function Controls({
-  hidden,
-  fullscreen,
-  canFullscreen,
-  onToggleFullscreen,
-  onOpenSettings,
-}: Props) {
+/** Footer controls: fullscreen and settings, always visible. */
+export function Controls({ fullscreen, canFullscreen, onToggleFullscreen, onOpenSettings }: Props) {
   return (
-    <div className={`controls${hidden ? ' controls--hidden' : ''}`}>
+    <div className="controls">
       {canFullscreen && (
         <button
           type="button"

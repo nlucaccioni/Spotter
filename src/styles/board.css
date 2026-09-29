@@ -394,7 +394,7 @@
   color: var(--favorite);
 }
 
-/* ---- Display mode: cursor and controls hide after inactivity ---- */
+/* ---- Display mode: the cursor hides after inactivity ---- */
 
 .app--idle,
 .app--idle * {
@@ -405,17 +405,6 @@
   display: flex;
   flex: none;
   gap: 6px;
-  transition: opacity 0.3s;
-}
-
-.controls--hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.controls--hidden:focus-within {
-  opacity: 1;
-  pointer-events: auto;
 }
 
 .control-button {
