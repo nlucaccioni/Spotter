@@ -16,6 +16,8 @@ export interface Preferences {
   favorites: string[];
   /** Show favorites at the top of the table. */
   pinFavorites: boolean;
+  /** Opt-in: team-styled car-number graphics hotlinked from NASCAR's CDN. */
+  showCarBadges: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -24,6 +26,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   hiddenColumns: [],
   favorites: [],
   pinFavorites: false,
+  showCarBadges: false,
 };
 
 /** Identity columns that can't be hidden. */
@@ -50,6 +53,7 @@ const schema = z.object({
     .catch([])
     .transform((keys) => keys.filter((k): k is string => typeof k === 'string')),
   pinFavorites: z.boolean().catch(DEFAULT_PREFERENCES.pinFavorites),
+  showCarBadges: z.boolean().catch(DEFAULT_PREFERENCES.showCarBadges),
 });
 
 /** Parses stored JSON; anything missing or invalid falls back to the default. */

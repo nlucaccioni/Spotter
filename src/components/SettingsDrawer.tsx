@@ -67,6 +67,14 @@ export function SettingsDrawer({ session, onClose }: Props) {
             checked={prefs.pinFavorites}
             onChange={(pinFavorites) => update({ pinFavorites })}
           />
+          <Toggle
+            label="Team car-number graphics"
+            checked={prefs.showCarBadges}
+            onChange={(showCarBadges) => update({ showCarBadges })}
+          />
+          <p className="drawer__hint">
+            Loads each team&apos;s styled car number from NASCAR&apos;s servers. Off by default.
+          </p>
         </section>
 
         <section className="drawer__section">

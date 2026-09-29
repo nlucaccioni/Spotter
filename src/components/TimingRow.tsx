@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { formatGap } from '../data/model/gaps.ts';
 import type { CarState } from '../data/model/types.ts';
 import {
@@ -29,6 +29,8 @@ interface Props {
   favorite: boolean;
   /** On the out lap (tracked across snapshots by the session history). */
   onOutLap: boolean;
+  /** Opt-in car-number graphic; the plain number is shown when null or if it fails to load. */
+  badgeUrl: string | null;
   /** Called with the driver's favorite key on double-click. */
   onToggleFavorite: (key: string) => void;
   favoriteKey: string;
@@ -44,6 +46,7 @@ export const TimingRow = memo(function TimingRow({
   updateId,
   favorite,
   onOutLap,
+  badgeUrl,
   onToggleFavorite,
   favoriteKey,
 }: Props) {
@@ -80,6 +83,7 @@ export const TimingRow = memo(function TimingRow({
           sessionBest={sessionBest}
           sessionFinished={sessionFinished}
           onOutLap={onOutLap}
+          badgeUrl={badgeUrl}
         />
       ))}
     </tr>
@@ -93,7 +97,11 @@ function Cell({
   sessionBest,
   sessionFinished,
   onOutLap,
-}: Pick<Props, 'car' | 'nameFormat' | 'sessionBest' | 'sessionFinished' | 'onOutLap'> & {
+  badgeUrl,
+}: Pick<
+  Props,
+  'car' | 'nameFormat' | 'sessionBest' | 'sessionFinished' | 'onOutLap' | 'badgeUrl'
+> & {
   column: ColumnDef;
 }) {
   const align = `cell--${column.align}`;
@@ -108,7 +116,11 @@ function Cell({
     }
 
     case 'car':
-      return <td className={`${align} cell--car`}>{car.carNumber}</td>;
+      return (
+        <td className={`${align} cell--car`}>
+          <CarNumber number={car.carNumber} badgeUrl={badgeUrl} />
+        </td>
+      );
 
     case 'driver':
       return (
@@ -230,4 +242,26 @@ function Cell({
       );
     }
   }
+}
+
+/** Badge URLs that failed to load this session, so rows don't keep retrying them. */
+const failedBadges = new Set<string>();
+
+function CarNumber({ number, badgeUrl }: { number: string; badgeUrl: string | null }) {
+  const [failed, setFailed] = useState(false);
+  if (!badgeUrl || failed || failedBadges.has(badgeUrl)) return <>{number}</>;
+  return (
+    <img
+      className="car-badge"
+      src={badgeUrl}
+      alt={number}
+      title={`#${number}`}
+      decoding="async"
+      referrerPolicy="no-referrer"
+      onError={() => {
+        failedBadges.add(badgeUrl);
+        setFailed(true);
+      }}
+    />
+  );
 }

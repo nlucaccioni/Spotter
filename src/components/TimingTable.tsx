@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import type { Session } from '../data/model/types.ts';
+import type { CarState, Session } from '../data/model/types.ts';
 import { favoriteKey } from '../prefs/preferences.ts';
 import { useRowReorderAnimation } from '../hooks/useRowReorderAnimation.ts';
 import type { BoardLayout } from './board/layout.ts';
@@ -16,6 +16,8 @@ interface Props {
   pinFavorites: boolean;
   onToggleFavorite: (key: string) => void;
   outLaps: ReadonlySet<string>;
+  /** Car-number graphic lookup when the opt-in is on, otherwise null. */
+  badgeFor: ((car: CarState) => string | null) | null;
 }
 
 export function TimingTable({
@@ -27,6 +29,7 @@ export function TimingTable({
   pinFavorites,
   onToggleFavorite,
   outLaps,
+  badgeFor,
 }: Props) {
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
 
@@ -99,6 +102,7 @@ export function TimingTable({
                 updateId={updateId}
                 favorite={favorites.has(favoriteKey(car))}
                 onOutLap={outLaps.has(car.carNumber)}
+                badgeUrl={badgeFor?.(car) ?? null}
                 favoriteKey={favoriteKey(car)}
                 onToggleFavorite={onToggleFavorite}
               />

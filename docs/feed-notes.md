@@ -36,9 +36,12 @@ See `PROJECT_BRIEF.md` §3 for the baseline. Add a dated entry whenever somethin
 
 ## CORS checks
 
-| Feed                        | CORS OK?                                         | Date checked |
-| --------------------------- | ------------------------------------------------ | ------------ |
-| `live/feeds/live-feed.json` | Yes (`Access-Control-Allow-Origin: *`, GET/HEAD) | 2026-09-27   |
+| Feed                                         | CORS OK?                                         | Date checked |
+| -------------------------------------------- | ------------------------------------------------ | ------------ |
+| `cacher/drivers.json`                        | Yes (`Access-Control-Allow-Origin: *`)           | 2026-09-28   |
+| `data/images/carbadges/<series>/<badge>.png` | Yes (`Access-Control-Allow-Origin: *`)           | 2026-09-28   |
+| `cacher/2026/1/5628/weekend-feed.json`       | Yes (`Access-Control-Allow-Origin: *`)           | 2026-09-28   |
+| `live/feeds/live-feed.json`                  | Yes (`Access-Control-Allow-Origin: *`, GET/HEAD) | 2026-09-27   |
 
 ## Log
 
@@ -83,3 +86,14 @@ Of 196 observed pit exits, 134 left pit road with the lap count already one past
 line), and 2 with +2. So "out lap" can't be derived from a single snapshot; the board records
 each car's lap count when it's seen leaving pit road and shows OUT until that count goes up
 (`src/data/model/outLaps.ts`). Worth confirming against NASCAR's own feed during a live race.
+
+### 2026-09-28 — Driver list and car-number badges
+
+- `cacher/drivers.json` (~1.4 MB, 918 drivers) has per driver: `Nascar_Driver_ID` (matches the
+  live feed's `driver.driver_id`), `Full_Name`, `Badge`, `Badge_Image`, `Team`, `Driver_Series`
+  and image URLs. No car/number colors as data.
+- `Badge_Image` is `https://cf.nascar.com/data/images/carbadges/<series id>/<badge>.png`: a 78×70
+  transparent PNG of the car number in the team's styling. For Cup the badge id is the car
+  number; it isn't always (a Truck entry had `4237`), and each driver has one entry for their
+  main series.
+- Used only by the opt-in "Team car-number graphics" setting (hotlinked, not hosted by us).

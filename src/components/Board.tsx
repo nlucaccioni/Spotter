@@ -2,6 +2,7 @@ import { useCallback, useMemo, type CSSProperties } from 'react';
 import type { Session } from '../data/model/types.ts';
 import type { PollStatus } from '../data/polling/poller.ts';
 import { useElementSize } from '../hooks/useElementSize.ts';
+import { useCarBadges } from '../hooks/useCarBadges.ts';
 import { usePreferences } from '../hooks/usePreferences.ts';
 import { toggleInList } from '../prefs/preferences.ts';
 import { computeBoardLayout } from './board/layout.ts';
@@ -40,6 +41,8 @@ export function Board({
     (key: string) => updatePrefs((p) => ({ favorites: toggleInList(p.favorites, key) })),
     [updatePrefs],
   );
+
+  const badgeFor = useCarBadges(prefs.showCarBadges, session.series.id);
 
   const [boardRef, board] = useElementSize<HTMLDivElement>();
   const [headerRef, header] = useElementSize<HTMLDivElement>();
@@ -84,6 +87,7 @@ export function Board({
           pinFavorites={prefs.pinFavorites}
           onToggleFavorite={toggleFavorite}
           outLaps={outLaps}
+          badgeFor={badgeFor}
         />
       </main>
     </div>

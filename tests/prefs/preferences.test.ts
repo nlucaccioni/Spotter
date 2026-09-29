@@ -31,6 +31,7 @@ describe('parsePreferences', () => {
       hiddenColumns: ['mfr'],
       favorites: ['id:4030', 'name:Kyle Larson'],
       pinFavorites: true,
+      showCarBadges: false,
     });
   });
 
