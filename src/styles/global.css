@@ -61,6 +61,11 @@
   --badge-contender: #6f4b00;
   --badge-pit: #0969da;
   --favorite: #086a74;
+  /* Light theme: deeper manufacturer colors with white text (AA on every chip). */
+  --mfr-chv: #876200;
+  --mfr-frd: #1f4e9c;
+  --mfr-tyt: #c8102e;
+  --mfr-text: #ffffff;
   /* Plate behind car-number graphics in the light theme only. */
   --badge-plate: #cfcfcf;
   --overlay: rgba(0, 0, 0, 0.3);
