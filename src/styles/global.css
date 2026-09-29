@@ -26,12 +26,11 @@
   --badge-pit: #58a6ff;
   --favorite: #39c5cf;
   /* Manufacturer chips: brand-associated colors only, no logos or marks. */
+  /* Light enough that black text passes WCAG AA on every chip. */
   --mfr-chv: #d4a72c;
-  --mfr-chv-text: #1a1406;
-  --mfr-frd: #2f5fb3;
-  --mfr-frd-text: #ffffff;
-  --mfr-tyt: #d42a33;
-  --mfr-tyt-text: #ffffff;
+  --mfr-frd: #5b8def;
+  --mfr-tyt: #ef5a5a;
+  --mfr-text: #111111;
   --overlay: rgba(0, 0, 0, 0.55);
   --stale-bg: #5c4400;
   --stale-text: #ffe8a3;
@@ -62,12 +61,6 @@
   --badge-contender: #6f4b00;
   --badge-pit: #0969da;
   --favorite: #086a74;
-  --mfr-chv: #c9971a;
-  --mfr-chv-text: #1a1406;
-  --mfr-frd: #1f4e9c;
-  --mfr-frd-text: #ffffff;
-  --mfr-tyt: #c8102e;
-  --mfr-tyt-text: #ffffff;
   /* Plate behind car-number graphics in the light theme only. */
   --badge-plate: #cfcfcf;
   --overlay: rgba(0, 0, 0, 0.3);

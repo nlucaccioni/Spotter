@@ -568,19 +568,22 @@
   vertical-align: 0.15em;
 }
 
+.mfr-chip--chv,
+.mfr-chip--frd,
+.mfr-chip--tyt {
+  color: var(--mfr-text);
+}
+
 .mfr-chip--chv {
   background: var(--mfr-chv);
-  color: var(--mfr-chv-text);
 }
 
 .mfr-chip--frd {
   background: var(--mfr-frd);
-  color: var(--mfr-frd-text);
 }
 
 .mfr-chip--tyt {
   background: var(--mfr-tyt);
-  color: var(--mfr-tyt-text);
 }
 
 /* Light theme: frame the car-number graphics, since white numbers (e.g. #24) vanish on the
