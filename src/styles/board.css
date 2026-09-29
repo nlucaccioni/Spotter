@@ -546,8 +546,11 @@
 
 .mfr-chip {
   display: inline-block;
-  padding: 0.18em 0.6em;
+  /* Same width for every maker: the longest name (TOYOTA, 6 mono chars) plus padding. */
+  min-width: calc(6ch + 1.2em);
+  padding: 0.3em 0.6em;
   border-radius: 999px;
+  text-align: center;
   background: var(--badge-bg);
   color: var(--text);
   font-family: var(--font-mono);
