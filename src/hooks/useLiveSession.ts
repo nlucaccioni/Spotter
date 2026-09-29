@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { createDelayBuffer, type Timed } from '../data/delayBuffer.ts';
-import { createLiveSessionPoller, type LiveSnapshot } from '../data/liveSession.ts';
-import { documentVisibility, type PollerState } from '../data/polling/poller.ts';
+import { createLiveSessionPoller, LIVE_FEED_URL, type LiveSnapshot } from '../data/liveSession.ts';
+import { documentVisibility, type Poller, type PollerState } from '../data/polling/poller.ts';
 import { createSessionHistory, type HistoryUpdate } from '../data/sessionHistory.ts';
 import { createBrowserFetcher } from '../data/sources/browserFetcher.ts';
 import type { Fetcher } from '../data/sources/fetcher.ts';
@@ -14,7 +14,8 @@ import {
 // One poller per tab, shared by every component that uses the hook. It starts with the first
 // subscriber and stops when the last one unmounts. New snapshots pass through the TV-delay
 // buffer; each one shown is diffed against the previous one to produce events and position
-// changes, so events, flashes and slides are delayed along with the data.
+// changes, so events, flashes and slides are delayed along with the data. Switching feeds
+// (another series) starts over with a fresh poller, buffer and history.
 
 interface StoreState {
   /** Real-time polling state (status, errors); never delayed. */
@@ -33,23 +34,19 @@ const replay: ReplayOptions | null = import.meta.env.DEV
   : null;
 
 function createStore() {
-  const poller = createLiveSessionPoller({
-    fetcher: replay ? lazyReplayFetcher(replay) : createBrowserFetcher(),
-    visibility: documentVisibility(),
-    onSnapshot: logSnapshot,
-    // Replays don't touch NASCAR's CDN, so the politeness floor doesn't apply.
-    ...(replay && {
-      timing: { activeMs: (RECORDED_FRAME_SECONDS * 1000) / replay.speed, minMs: 50, jitter: 0 },
-    }),
-  });
-  const history = createSessionHistory();
-  const buffer = createDelayBuffer<LiveSnapshot>();
+  const fetcher = replay ? lazyReplayFetcher(replay) : createBrowserFetcher();
   const listeners = new Set<() => void>();
+  let poller: Poller<LiveSnapshot> | null = null;
+  let unsubscribePoller: (() => void) | null = null;
+  let history = createSessionHistory();
+  let buffer = createDelayBuffer<LiveSnapshot>();
   let lastData: LiveSnapshot | null = null;
+  // Replays ignore the URL, so they start straight away; otherwise App picks the feed.
+  let url: string | null = replay ? LIVE_FEED_URL : null;
   let delayMs = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let state: StoreState = {
-    poll: poller.getState(),
+    poll: NOT_POLLING,
     shown: null,
     history: null,
     nextDueAt: null,
@@ -70,17 +67,52 @@ function createStore() {
     for (const listener of listeners) listener();
   }
 
-  poller.subscribe((poll) => {
-    if (poll.data && poll.data !== lastData) {
-      lastData = poll.data;
-      buffer.push(poll.data, poll.lastSuccessAt ?? Date.now());
+  /** Starts polling `url` from scratch: nothing from the previous feed carries over. */
+  function connect() {
+    unsubscribePoller?.();
+    poller?.stop();
+    poller = null;
+    unsubscribePoller = null;
+    history = createSessionHistory();
+    buffer = createDelayBuffer<LiveSnapshot>();
+    lastData = null;
+    state = { ...state, shown: null, history: null };
+    if (url === null) {
+      flush(NOT_POLLING);
+      return;
     }
-    flush(poll);
-  });
+    const next = createLiveSessionPoller({
+      fetcher,
+      url,
+      visibility: documentVisibility(),
+      onSnapshot: logSnapshot,
+      // Replays don't touch NASCAR's CDN, so the politeness floor doesn't apply.
+      ...(replay && {
+        timing: { activeMs: (RECORDED_FRAME_SECONDS * 1000) / replay.speed, minMs: 50, jitter: 0 },
+      }),
+    });
+    poller = next;
+    unsubscribePoller = next.subscribe((poll) => {
+      if (poll.data && poll.data !== lastData) {
+        lastData = poll.data;
+        buffer.push(poll.data, poll.lastSuccessAt ?? Date.now());
+      }
+      flush(poll);
+    });
+    flush(next.getState());
+    if (subscribers > 0) next.start();
+  }
+
+  connect();
 
   return {
     getState: () => state,
-    refresh: () => poller.refresh(),
+    refresh: () => poller?.refresh(),
+    setUrl(next: string | null) {
+      if (replay || next === url) return;
+      url = next;
+      connect();
+    },
     setDelaySeconds(seconds: number) {
       const next = Math.max(0, seconds) * 1000;
       if (next === delayMs) return;
@@ -89,14 +121,25 @@ function createStore() {
     },
     subscribe(onChange: () => void) {
       listeners.add(onChange);
-      if (subscribers++ === 0) poller.start();
+      if (subscribers++ === 0) poller?.start();
       return () => {
         listeners.delete(onChange);
-        if (--subscribers === 0) poller.stop();
+        if (--subscribers === 0) poller?.stop();
       };
     },
   };
 }
+
+/** Before a feed is chosen (e.g. while a series' schedule loads). */
+const NOT_POLLING: PollerState<LiveSnapshot> = {
+  status: 'connecting',
+  data: null,
+  error: null,
+  consecutiveErrors: 0,
+  lastSuccessAt: null,
+  lastChangeAt: null,
+  nextPollAt: null,
+};
 
 const NO_CARS: ReadonlySet<string> = new Set();
 
@@ -104,6 +147,11 @@ let store: ReturnType<typeof createStore> | null = null;
 const getStore = () => (store ??= createStore());
 const subscribe = (onChange: () => void) => getStore().subscribe(onChange);
 const getSnapshot = () => getStore().getState();
+
+/** Switches the board to another live feed; null stops polling until one is chosen. */
+export function setLiveFeedUrl(url: string | null) {
+  getStore().setUrl(url);
+}
 
 /** Sets the TV delay; the board then shows each update this many seconds after it arrives. */
 export function setLiveDelaySeconds(seconds: number) {

@@ -458,6 +458,51 @@
   outline-offset: 2px;
 }
 
+/* Series picker: a native select (keyboard and mobile pickers for free) sized like the buttons. */
+.series-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.series-select__input {
+  height: 26px;
+  padding: 0 22px 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  appearance: none;
+}
+
+.series-select__input:hover {
+  background: var(--badge-bg);
+}
+
+.series-select__input:focus-visible {
+  outline: 2px solid var(--badge-pit);
+  outline-offset: 2px;
+}
+
+.series-select__input option {
+  background: var(--surface);
+  color: var(--text);
+  text-transform: none;
+}
+
+.series-select__icon {
+  position: absolute;
+  right: 6px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
 /* ---- Settings drawer ---- */
 
 .drawer-backdrop {

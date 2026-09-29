@@ -9,7 +9,8 @@ import { PointsPage } from './components/points/PointsPage.tsx';
 import { SettingsDrawer } from './components/SettingsDrawer.tsx';
 import { useDisplayMode } from './hooks/useDisplayMode.ts';
 import { useHashRoute } from './hooks/useHashRoute.ts';
-import { setLiveDelaySeconds, useLiveSession } from './hooks/useLiveSession.ts';
+import { setLiveDelaySeconds, setLiveFeedUrl, useLiveSession } from './hooks/useLiveSession.ts';
+import { useLiveSource } from './hooks/useLiveSource.ts';
 import { useApplyTheme, usePreferences } from './hooks/usePreferences.ts';
 
 export default function App() {
@@ -29,8 +30,10 @@ export default function App() {
     delaySeconds,
     holdingUntil,
   } = useLiveSession();
-  const [prefs] = usePreferences();
+  const [prefs, updatePrefs] = usePreferences();
   useEffect(() => setLiveDelaySeconds(prefs.delaySeconds), [prefs.delaySeconds]);
+  const source = useLiveSource(prefs.liveSeries);
+  useEffect(() => setLiveFeedUrl(source.feedUrl), [source.feedUrl]);
   useApplyTheme();
 
   const [route, navigate] = useHashRoute();
@@ -45,7 +48,11 @@ export default function App() {
     <div className={`app${idle ? ' app--idle' : ''}`}>
       {route === 'points' ? (
         <ErrorBoundary>
-          <PointsPage session={session} delaySeconds={delaySeconds} />
+          <PointsPage
+            session={session}
+            livePointsUrl={source.pointsUrl}
+            delaySeconds={delaySeconds}
+          />
         </ErrorBoundary>
       ) : session ? (
         <>
@@ -67,8 +74,8 @@ export default function App() {
         </>
       ) : (
         <FeedStatusScreen
-          status={status}
-          error={error}
+          status={source.error ? 'error' : status}
+          error={source.error ?? error}
           nextPollAt={nextPollAt}
           onRetry={retry}
           holdingUntil={holdingUntil}
@@ -87,6 +94,8 @@ export default function App() {
           canFullscreen={display.canFullscreen}
           onToggleFullscreen={display.toggleFullscreen}
           onOpenSettings={() => setSettingsOpen(true)}
+          series={prefs.liveSeries}
+          onSeriesChange={replay ? null : (liveSeries) => updatePrefs({ liveSeries })}
         />
       </footer>
       {settingsOpen && <SettingsDrawer session={session} onClose={closeSettings} />}

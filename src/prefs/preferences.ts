@@ -1,11 +1,15 @@
 import { z } from 'zod';
 import { COLUMNS, type ColumnId } from '../components/board/layout.ts';
+import { SERIES_IDS, type SeriesId } from '../data/feeds/schedule.ts';
 import type { CarState } from '../data/model/types.ts';
 
 // User preferences (PROJECT_BRIEF.md §5.2, milestone 6). Persisted as JSON in localStorage;
 // parsing is tolerant so a stale or hand-edited value never breaks the board.
 
 export type Theme = 'dark' | 'light';
+
+/** Which live timing to follow: whatever NASCAR is featuring, or one series. */
+export type LiveSeries = 'auto' | SeriesId;
 
 export interface Preferences {
   theme: Theme;
@@ -20,6 +24,7 @@ export interface Preferences {
   showCarBadges: boolean;
   /** TV delay: show each update this many seconds after it arrives (0 = live). */
   delaySeconds: number;
+  liveSeries: LiveSeries;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -30,6 +35,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   pinFavorites: false,
   showCarBadges: false,
   delaySeconds: 0,
+  liveSeries: 'auto',
 };
 
 export const MAX_DELAY_SECONDS = 900;
@@ -60,6 +66,10 @@ const schema = z.object({
   pinFavorites: z.boolean().catch(DEFAULT_PREFERENCES.pinFavorites),
   showCarBadges: z.boolean().catch(DEFAULT_PREFERENCES.showCarBadges),
   delaySeconds: z.number().catch(0).transform(clampDelay),
+  liveSeries: z
+    .union([z.literal('auto'), z.number()])
+    .catch('auto')
+    .transform((v): LiveSeries => (SERIES_IDS.includes(v as SeriesId) ? (v as SeriesId) : 'auto')),
 });
 
 /** Parses stored JSON; anything missing or invalid falls back to the default. */

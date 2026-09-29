@@ -1,10 +1,6 @@
 import { useMemo, useState } from 'react';
-import {
-  LIVE_POINTS_URL,
-  parseLivePoints,
-  parseSeasonPoints,
-  seasonPointsUrl,
-} from '../../data/feeds/points.ts';
+import { parseLivePoints, parseSeasonPoints, seasonPointsUrl } from '../../data/feeds/points.ts';
+import { SERIES_IDS, SERIES_SHORT } from '../../data/feeds/schedule.ts';
 import { seriesFromId } from '../../data/model/lookups.ts';
 import type { Manufacturer, Session } from '../../data/model/types.ts';
 import { useCarBadges } from '../../hooks/useCarBadges.ts';
@@ -17,17 +13,16 @@ import { SeasonStandingsTable } from './SeasonStandingsTable.tsx';
 
 type Tab = 'live' | 'season';
 
-const SERIES_IDS = [1, 2, 3] as const;
-const SERIES_SHORT: Record<number, string> = { 1: 'Cup', 2: "O'Reilly", 3: 'Truck' };
-
 interface Props {
   /** The live session on the board (after the TV delay), if any. */
   session: Session | null;
+  /** Live points for the race the board is following; null while that's being worked out. */
+  livePointsUrl: string | null;
   delaySeconds: number;
 }
 
 /** Live race points and season standings (PROJECT_BRIEF.md "Later milestones"). */
-export function PointsPage({ session, delaySeconds }: Props) {
+export function PointsPage({ session, livePointsUrl, delaySeconds }: Props) {
   const [prefs] = usePreferences();
   const [tab, setTab] = useState<Tab>('live');
   const liveSeries = session?.series.id ?? 1;
@@ -36,7 +31,7 @@ export function PointsPage({ session, delaySeconds }: Props) {
   const [currentYear] = useState(() => new Date().getFullYear());
   const year = session?.updatedAtMs ? new Date(session.updatedAtMs).getFullYear() : currentYear;
 
-  const live = usePolledFeed(tab === 'live' ? LIVE_POINTS_URL : null, parseLivePoints, {
+  const live = usePolledFeed(tab === 'live' ? livePointsUrl : null, parseLivePoints, {
     intervalMs: 15_000,
     delaySeconds,
   });
@@ -84,7 +79,7 @@ export function PointsPage({ session, delaySeconds }: Props) {
           {tab === 'season' && (
             <Segmented
               label="Series"
-              options={SERIES_IDS.map((id) => [id, SERIES_SHORT[id]!] as const)}
+              options={SERIES_IDS.map((id) => [id, SERIES_SHORT[id]] as const)}
               value={seasonSeries}
               onChange={setPickedSeries}
             />

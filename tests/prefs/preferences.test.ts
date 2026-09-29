@@ -35,6 +35,7 @@ describe('parsePreferences', () => {
       pinFavorites: true,
       showCarBadges: false,
       delaySeconds: 0,
+      liveSeries: 'auto',
     });
   });
 
@@ -136,5 +137,14 @@ describe('TV delay values', () => {
     expect(parsePreferences(JSON.stringify({ delaySeconds: 42 })).delaySeconds).toBe(42);
     expect(parsePreferences(JSON.stringify({ delaySeconds: 99999 })).delaySeconds).toBe(900);
     expect(parsePreferences(JSON.stringify({ delaySeconds: 'soon' })).delaySeconds).toBe(0);
+  });
+
+  it('keeps a known series and falls back to auto', () => {
+    const series = (value: unknown) =>
+      parsePreferences(JSON.stringify({ liveSeries: value })).liveSeries;
+    expect(series(3)).toBe(3);
+    expect(series('auto')).toBe('auto');
+    expect(series(4)).toBe('auto');
+    expect(series('cup')).toBe('auto');
   });
 });

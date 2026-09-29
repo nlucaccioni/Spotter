@@ -55,7 +55,7 @@ All data comes from NASCAR's public CDN at `cf.nascar.com`. It's undocumented, u
 
 **CORS has been verified.** A `fetch()` from a third-party origin (example.com) succeeded in the browser. This is the foundation of the static-site approach.
 
-The feed always reflects whatever single session NASCAR currently has live (any series). Between sessions it keeps serving the last session's final state.
+The feed always reflects whatever single session NASCAR currently has live (any series). Between sessions it keeps serving the last session's final state. Each race also has its own feed, `live/feeds/series_{series}/{race_id}/live_feed.json`, with the same shape; the series picker uses it (see "Series picker" in §9).
 
 **Top-level fields (observed):**
 
@@ -320,6 +320,7 @@ Pos · ± (position change since start or last N laps) · Car # · Driver (with 
 
   Both tabs follow the TV delay, highlight favorites, and show manufacturer pills and the opt-in car-number graphics like the board. The live points feed has no manufacturer, so the live tab takes it from the race on the board. Columns drop out and driver names shorten by width, using container queries. The Live race / Season tabs always sit at the far right, with the series picker to their left on the Season tab. `usePolledFeed` wraps the same polling engine (jitter, backoff, pause when hidden) for these feeds.
 
+- **Series picker:** ✅ Done 2026-09-28. A select in the footer: **Auto** (default) follows `live-feed.json`, i.e. whatever NASCAR is featuring. **Cup / O'Reilly / Truck** follow that series' current race through its own `live/feeds/series_{n}/{race_id}/live_feed.json` (and `live_points.json` for the live points tab). The current race comes from `cacher/{year}/{series}/race_list_basic.json` (this season and last, fetched once per page): the latest race whose first on-track session (schedule `run_type` 1–3: practice, qualifying, race) has started. So between weekends the board shows the last race's results, and it moves on when the next weekend's first practice starts (re-checked every minute). Switching series starts polling from scratch (fresh history and TV-delay buffer). Saved as the `liveSeries` preference. Hidden during dev replays. `live-ops.json` was considered but its per-series race ids and feed URLs were stale (2026-09-28).
 - **Racing-insights gaps (checked 2026-09-28, not built):** `racing-insights/raw-feed/{race_id}-NCS.json` (CORS: *) gives the same `Delta` as the live feed, and `DeltaNext` matched our computed interval for all 25 cars with a time or lap gap in the Kansas final. The other 11 are lapped cars on the same lap as the car ahead: NASCAR shows "0L" where we show "—". So official gaps add no precision. The feed is still valuable for pit stop times, tires, laps since pit, positions gained over recent laps, average lap times, stage finishes and `PointsThisRace`.
 
 ---

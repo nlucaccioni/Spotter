@@ -46,6 +46,10 @@ See `PROJECT_BRIEF.md` §3 for the baseline. Add a dated entry whenever somethin
 | `cacher/drivers.json`                                     | Yes (`Access-Control-Allow-Origin: *`)           | 2026-09-28   |
 | `data/images/carbadges/<series>/<badge>.png`              | Yes (`Access-Control-Allow-Origin: *`)           | 2026-09-28   |
 | `cacher/2026/1/5628/weekend-feed.json`                    | Yes (`Access-Control-Allow-Origin: *`)           | 2026-09-28   |
+| `live/feeds/series_{series}/{race_id}/live_feed.json`     | Yes (`*`)                                        | 2026-09-28   |
+| `live/feeds/series_{series}/{race_id}/live_points.json`   | Yes (`*`)                                        | 2026-09-28   |
+| `cacher/{year}/{series}/race_list_basic.json`             | Yes (`*`)                                        | 2026-09-28   |
+| `live-ops/live-ops.json`                                  | Yes (`*`)                                        | 2026-09-28   |
 | `live/feeds/live-feed.json`                               | Yes (`Access-Control-Allow-Origin: *`, GET/HEAD) | 2026-09-27   |
 
 ## Log
@@ -125,3 +129,24 @@ each car's lap count when it's seen leaving pit road and shows OUT until that co
 - **To confirm during a live Truck session:** the live feed's `vehicle_manufacturer` code for RAM
   (the others are `Chv`, `Frd`, `Tyt`). The board accepts `Ram`, `RAM` and `Rm`; anything else
   shows as plain text until it's added in `src/data/model/lookups.ts`.
+
+### 2026-09-28 — Per-series live feeds and schedules
+
+- `live/feeds/series_{n}/{race_id}/live_feed.json` (also `cacher/live/series_{n}/{race_id}/live-feed.json`)
+  has the same shape as `live-feed.json`. Checked on finished races: Cup 5628 (Kansas), O'Reilly
+  5660 (Bristol, 38 cars), Truck 5675 (Kansas). A race whose weekend hasn't started returns
+  **403** (Cup 5630, O'Reilly 5663).
+- `live_points.json` next to it works the same way (O'Reilly 5660: 200).
+- `cacher/{year}/{series}/race_list_basic.json`: array of races (`cacher/{year}/race_list_basic.json`
+  has all series keyed `series_1`…). Each has `race_id`, `race_name` (sometimes with a trailing
+  space), `track_name`, `date_scheduled` (no offset; Eastern: 5630 says 17:30 for a 21:30 UTC
+  start), and `schedule`: the weekend's events with `start_time_utc` (UTC, no offset) and
+  `run_type` (0 = off-track, e.g. hauler parade or garage hours; 1 practice; 2 qualifying; 3 race).
+  A few future races have no on-track events listed yet. Exhibition races (Clash, Duels,
+  All-Star) are in the list with `race_type_id` 2. Next season's list already exists (2027: 200).
+- `live-ops/live-ops.json` has `live_feed_url_series{n}` and `live_current_series{n}_race`, but on
+  2026-09-28 they were no use for picking a race: `live_feed_url_series1` pointed at race 5598,
+  `live_current_series{n}_race` was the _next_ race, and `live_current_series{n}_tunein_bar_race` the
+  latest. The schedule is used instead.
+- **To confirm live:** that a series feed switches to practice/qualifying when the weekend's
+  first session starts (the board assumes it does), and how it looks between practice and the race.
