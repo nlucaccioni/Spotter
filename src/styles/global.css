@@ -2,24 +2,25 @@
 :root,
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0b0d10;
-  --surface: #14181d;
-  --row-alt: #11151a;
-  --border: #262c33;
-  --text: #e6e9ec;
-  --text-muted: #8b949e;
+  /* Neutral greys (no blue cast), same brightness as before. */
+  --bg: #0d0d0d;
+  --surface: #171717;
+  --row-alt: #141414;
+  --border: #2a2a2a;
+  --text: #e8e8e8;
+  --text-muted: #999999;
 
   --flag-green: #1f9d55;
   --flag-yellow: #f2c200;
   --flag-red: #d64545;
   --flag-white: #f5f5f5;
-  --flag-checkered: #e6e9ec;
+  --flag-checkered: #e8e8e8;
 
   --up: #3fb950;
   --down: #f0706a;
   --personal-best: #3fb950;
   --session-best: #c297ff;
-  --badge-bg: #2a313a;
+  --badge-bg: #2e2e2e;
   --badge-contender: #e3b341;
   --badge-pit: #58a6ff;
   --favorite: #39c5cf;
@@ -41,20 +42,20 @@
 
 :root[data-theme='light'] {
   color-scheme: light;
-  --bg: #f6f7f9;
+  --bg: #f7f7f7;
   --surface: #ffffff;
-  --row-alt: #eef0f3;
-  --border: #d9dde2;
-  --text: #16191d;
-  --text-muted: #5b6570;
+  --row-alt: #efefef;
+  --border: #dcdcdc;
+  --text: #171717;
+  --text-muted: #636363;
   --flag-white: #ffffff;
-  --flag-checkered: #16191d;
+  --flag-checkered: #171717;
 
   --up: #1a7f37;
   --down: #cf222e;
   --personal-best: #1a7f37;
   --session-best: #8250df;
-  --badge-bg: #dde1e6;
+  --badge-bg: #e0e0e0;
   --badge-contender: #9a6700;
   --badge-pit: #0969da;
   --favorite: #0a7d88;
