@@ -17,7 +17,6 @@ interface Props {
   lastChanged: number | null;
   nextPollAt: number | null;
   replayLabel: string | null;
-  delaySeconds: number;
   positionChanges: Map<string, number> | null;
   updateId: number;
   outLaps: ReadonlySet<string>;
@@ -33,7 +32,6 @@ interface Props {
 export function Board({
   session,
   replayLabel,
-  delaySeconds,
   positionChanges,
   updateId,
   outLaps,
@@ -82,12 +80,7 @@ export function Board({
         lapsToGo={session.lapsToGo}
       />
       <div ref={headerRef}>
-        <SessionHeader
-          session={session}
-          replayLabel={replayLabel}
-          delaySeconds={delaySeconds}
-          {...status}
-        />
+        <SessionHeader session={session} replayLabel={replayLabel} {...status} />
         {status.status === 'error' && (
           <StaleNotice lastUpdated={lastUpdated} nextPollAt={status.nextPollAt} onRetry={onRetry} />
         )}

@@ -1,4 +1,3 @@
-import { Timer } from 'lucide-react';
 import type { Session } from '../data/model/types.ts';
 import type { PollStatus } from '../data/polling/poller.ts';
 import { ConnectionStatus } from './ConnectionStatus.tsx';
@@ -10,18 +9,9 @@ interface Props {
   nextPollAt: number | null;
   /** Dev replay indicator, so a recording is never mistaken for live timing. */
   replayLabel?: string | null;
-  /** TV delay in seconds; shown as a tag when non-zero. */
-  delaySeconds?: number;
 }
 
-export function SessionHeader({
-  session,
-  status,
-  lastChanged,
-  nextPollAt,
-  replayLabel,
-  delaySeconds = 0,
-}: Props) {
+export function SessionHeader({ session, status, lastChanged, nextPollAt, replayLabel }: Props) {
   const { stage, cautions } = session;
   return (
     <header className="session-header">
@@ -40,15 +30,6 @@ export function SessionHeader({
         <Stat label="Cautions" value={`${cautions.segments} (${cautions.laps} laps)`} />
         <Stat label="Lead changes" value={`${session.leadChanges} (${session.leaders} leaders)`} />
         {replayLabel && <span className="replay-badge">{replayLabel}</span>}
-        {delaySeconds > 0 && (
-          <span
-            className="delay-badge"
-            title="TV delay: the board is held back to match your broadcast"
-          >
-            <Timer size="1em" aria-hidden="true" />
-            Delayed {delaySeconds}s
-          </span>
-        )}
         <ConnectionStatus
           status={status}
           hasData

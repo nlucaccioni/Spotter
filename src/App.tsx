@@ -49,7 +49,6 @@ export default function App() {
               lastChanged={lastChanged}
               nextPollAt={nextPollAt}
               replayLabel={replay && `Replay · ${replay.speed}×`}
-              delaySeconds={delaySeconds}
               positionChanges={positionChanges}
               updateId={updateId}
               outLaps={outLaps}
@@ -72,7 +71,7 @@ export default function App() {
         <span className="app__disclaimer">
           Unofficial fan project. Not affiliated with or endorsed by NASCAR. Data © NASCAR.
         </span>
-        <FooterClock lastUpdated={lastUpdated} />
+        <FooterClock lastUpdated={lastUpdated} delaySeconds={delaySeconds} />
         {/* In the footer so they never cover timing data. */}
         <Controls
           fullscreen={display.fullscreen}
