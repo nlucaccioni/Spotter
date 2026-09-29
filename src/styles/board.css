@@ -130,6 +130,19 @@
   overflow-y: auto;
 }
 
+/* Landscape: two side-by-side tables (gap set inline from SPLIT_GAP_PX). */
+.timing--split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-content: start;
+}
+
+.timing--empty {
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+}
+
 .timing-table {
   width: 100%;
   table-layout: fixed;
@@ -588,4 +601,102 @@
 
 .footer-clock__item svg {
   color: var(--text-muted);
+}
+
+/* ---- Feed status screen (before any data) and error boundary ---- */
+
+.feed-status {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.feed-status h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.feed-status__icon {
+  width: 40px;
+  height: 40px;
+  color: var(--text-muted);
+}
+
+.feed-status__icon--spin {
+  animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed-status__icon--spin {
+    animation: none;
+  }
+}
+
+.feed-status__text {
+  max-width: 34em;
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.feed-status__detail {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+}
+
+.feed-status__retry,
+.stale-notice__retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.feed-status__retry:focus-visible,
+.stale-notice__retry:focus-visible {
+  outline: 2px solid var(--badge-pit);
+  outline-offset: 2px;
+}
+
+/* ---- Stale data warning (feed failing while old data is on screen) ---- */
+
+.stale-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  background: var(--stale-bg);
+  color: var(--stale-text);
+  font-size: clamp(0.8rem, 1.1vh, 1.1rem);
+  font-weight: 600;
+}
+
+.stale-notice__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.stale-notice__retry {
+  padding: 2px 10px;
+  border-color: currentColor;
+  background: transparent;
+  color: inherit;
 }

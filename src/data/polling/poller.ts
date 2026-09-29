@@ -72,6 +72,8 @@ export interface PollerConfig<T> {
 export interface Poller<T> {
   start(): void;
   stop(): void;
+  /** Request now instead of waiting (e.g. a "Retry" button). No-op while a request is running. */
+  refresh(): void;
   getState(): PollerState<T>;
   subscribe(listener: (state: PollerState<T>) => void): () => void;
 }
@@ -205,6 +207,12 @@ export function createPoller<T>(config: PollerConfig<T>): Poller<T> {
       unsubscribeVisibility = null;
       if (state.status === 'paused') setState({ status: statusBeforePause, nextPollAt: null });
       else setState({ nextPollAt: null });
+    },
+
+    refresh() {
+      if (!running || inFlight) return;
+      clearTimer();
+      void tick();
     },
 
     getState: () => state,

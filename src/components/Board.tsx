@@ -8,6 +8,7 @@ import { toggleInList } from '../prefs/preferences.ts';
 import { computeBoardLayout } from './board/layout.ts';
 import { FlagBanner } from './FlagBanner.tsx';
 import { SessionHeader } from './SessionHeader.tsx';
+import { StaleNotice } from './StaleNotice.tsx';
 import { TimingTable } from './TimingTable.tsx';
 
 interface Props {
@@ -19,6 +20,8 @@ interface Props {
   positionChanges: Map<string, number> | null;
   updateId: number;
   outLaps: ReadonlySet<string>;
+  lastUpdated: number | null;
+  onRetry: () => void;
 }
 
 /**
@@ -32,6 +35,8 @@ export function Board({
   positionChanges,
   updateId,
   outLaps,
+  lastUpdated,
+  onRetry,
   ...status
 }: Props) {
   const [prefs, updatePrefs] = usePreferences();
@@ -76,6 +81,9 @@ export function Board({
       />
       <div ref={headerRef}>
         <SessionHeader session={session} replayLabel={replayLabel} {...status} />
+        {status.status === 'error' && (
+          <StaleNotice lastUpdated={lastUpdated} nextPollAt={status.nextPollAt} onRetry={onRetry} />
+        )}
       </div>
       <main className="app__main">
         <TimingTable

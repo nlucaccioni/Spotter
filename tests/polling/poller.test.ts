@@ -301,3 +301,42 @@ describe('poller — request discipline', () => {
     poller.stop();
   });
 });
+
+describe('poller — refresh', () => {
+  it('requests immediately, keeps the backoff count, and ignores clicks while in flight', async () => {
+    let fail = true;
+    const { poller, load } = makePoller({
+      load: vi.fn(async () => {
+        if (fail) throw new Error('offline');
+        return { value: 'ok' };
+      }),
+    });
+    poller.start();
+    await advance(0);
+    expect(poller.getState()).toMatchObject({ status: 'error', consecutiveErrors: 1 });
+
+    poller.refresh();
+    await advance(0);
+    expect(load).toHaveBeenCalledTimes(2);
+    expect(poller.getState().consecutiveErrors).toBe(2);
+
+    fail = false;
+    poller.refresh();
+    await advance(0);
+    expect(poller.getState()).toMatchObject({ status: 'live', consecutiveErrors: 0 });
+    poller.stop();
+  });
+
+  it('does nothing when stopped or while a request is running', async () => {
+    const { load, pending } = controllableLoad();
+    const { poller } = makePoller({ load });
+    poller.refresh();
+    expect(load).not.toHaveBeenCalled();
+    poller.start();
+    poller.refresh();
+    expect(load).toHaveBeenCalledTimes(1);
+    pending[0]!.resolve({ value: 'a' });
+    await advance(0);
+    poller.stop();
+  });
+});

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Board } from './components/Board.tsx';
-import { ConnectionStatus } from './components/ConnectionStatus.tsx';
+import { ErrorBoundary } from './components/ErrorBoundary.tsx';
+import { FeedStatusScreen } from './components/FeedStatusScreen.tsx';
 import { Controls } from './components/Controls.tsx';
 import { FooterClock } from './components/FooterClock.tsx';
 import { EventTicker } from './components/EventTicker.tsx';
@@ -21,6 +22,8 @@ export default function App() {
     updateId,
     outLaps,
     replay,
+    error,
+    retry,
   } = useLiveSession();
   const [prefs] = usePreferences();
   useApplyTheme();
@@ -36,28 +39,24 @@ export default function App() {
     <div className={`app${idle ? ' app--idle' : ''}`}>
       {session ? (
         <>
-          <Board
-            session={session}
-            status={status}
-            lastChanged={lastChanged}
-            nextPollAt={nextPollAt}
-            replayLabel={replay && `Replay · ${replay.speed}×`}
-            positionChanges={positionChanges}
-            updateId={updateId}
-            outLaps={outLaps}
-          />
+          <ErrorBoundary>
+            <Board
+              session={session}
+              status={status}
+              lastChanged={lastChanged}
+              nextPollAt={nextPollAt}
+              replayLabel={replay && `Replay · ${replay.speed}×`}
+              positionChanges={positionChanges}
+              updateId={updateId}
+              outLaps={outLaps}
+              lastUpdated={lastUpdated}
+              onRetry={retry}
+            />
+          </ErrorBoundary>
           {prefs.showTicker && <EventTicker events={events} />}
         </>
       ) : (
-        <main className="app__main app__main--empty">
-          <h1>Spotter</h1>
-          <ConnectionStatus
-            status={status}
-            hasData={false}
-            lastChanged={lastChanged}
-            nextPollAt={nextPollAt}
-          />
-        </main>
+        <FeedStatusScreen status={status} error={error} nextPollAt={nextPollAt} onRetry={retry} />
       )}
       <footer className="app__footer">
         <span className="app__disclaimer">

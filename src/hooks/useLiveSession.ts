@@ -52,6 +52,7 @@ function createStore() {
 
   return {
     getState: () => state,
+    refresh: () => poller.refresh(),
     subscribe(onChange: () => void) {
       listeners.add(onChange);
       if (subscribers++ === 0) poller.start();
@@ -84,6 +85,7 @@ export function useLiveSession() {
     updateId: history?.updateId ?? 0,
     outLaps: history?.outLaps ?? NO_CARS,
     replay,
+    retry: () => getStore().refresh(),
   };
 }
 

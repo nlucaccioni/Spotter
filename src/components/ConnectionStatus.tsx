@@ -1,5 +1,6 @@
 import type { PollStatus } from '../data/polling/poller.ts';
 import { useNow } from '../hooks/useNow.ts';
+import { formatAgo, formatDuration } from './board/format.ts';
 
 interface Props {
   status: PollStatus;
@@ -7,6 +8,15 @@ interface Props {
   lastChanged: number | null;
   nextPollAt: number | null;
 }
+
+/** Short label announced to screen readers; only changes when the status itself changes. */
+const ANNOUNCED: Record<PollStatus, string> = {
+  connecting: 'Connecting',
+  live: 'Live',
+  idle: 'Not live, showing last session',
+  error: 'Connection issue',
+  paused: 'Paused',
+};
 
 export function ConnectionStatus({ status, hasData, lastChanged, nextPollAt }: Props) {
   const now = useNow();
@@ -34,20 +44,13 @@ export function ConnectionStatus({ status, hasData, lastChanged, nextPollAt }: P
   }
 
   return (
-    <div className={`connection connection--${status}`} role="status">
+    <div className={`connection connection--${status}`}>
       <span className="connection__dot" aria-hidden="true" />
-      {label}
+      {/* The visible text ticks every second; screen readers only hear status changes. */}
+      <span aria-hidden="true">{label}</span>
+      <span className="visually-hidden" role="status">
+        {ANNOUNCED[status]}
+      </span>
     </div>
   );
-}
-
-function formatAgo(ms: number): string {
-  return ms < 5_000 ? 'just now' : `${formatDuration(ms)} ago`;
-}
-
-function formatDuration(ms: number): string {
-  const s = Math.round(ms / 1000);
-  if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60);
-  return m < 60 ? `${m}m ${s % 60}s` : `${Math.floor(m / 60)}h ${m % 60}m`;
 }
