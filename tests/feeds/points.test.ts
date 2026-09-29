@@ -35,6 +35,24 @@ describe('parseLivePoints (Kansas 2026 final)', () => {
     expect(entries[1]).toMatchObject({ carNumber: '11', behindLeader: -26, behindNext: -26 });
   });
 
+  it('splits race points into finish, stages and the fastest-lap point', () => {
+    const byCar = (n: string) => entries.find((e) => e.carNumber === n)!;
+    // Winner: 76 = 55 finish + 10 + 10 stages + 1 fastest lap.
+    expect(byCar('5')).toMatchObject({
+      earnedThisRace: 76,
+      finishPoints: 55,
+      fastestLapPoint: true,
+    });
+    // 2nd: 52 = 35 + 8 + 9.
+    expect(byCar('2')).toMatchObject({
+      earnedThisRace: 52,
+      finishPoints: 35,
+      fastestLapPoint: false,
+    });
+    // A 3-stage race: the final stage is scored as the finish, never as stage 3 points.
+    expect(entries.every((e) => e.stages[2]!.points === 0)).toBe(true);
+  });
+
   it('keeps drivers who are not points-eligible, flagged', () => {
     const ineligible = entries.filter((e) => !e.isPointsEligible);
     expect(ineligible.length).toBeGreaterThan(0);

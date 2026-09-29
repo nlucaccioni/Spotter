@@ -27,6 +27,10 @@ export function LivePointsTable({ entries, inRace, favorites, manufacturers, bad
     (e) => e.points > 0 || (e.driverId !== null && inRace.has(e.driverId)),
   );
   const hasBonus = rows.some((e) => e.bonusPoints !== 0);
+  // Only stages that award points: the last stage of a race is scored as the finish ("Fin").
+  const stageColumns = [0, 1, 2].filter((i) =>
+    rows.some((e) => e.stages[i]!.points > 0 || e.stages[i]!.won),
+  );
 
   return (
     <div className="points-table-wrap">
@@ -56,14 +60,24 @@ export function LivePointsTable({ entries, inRace, favorites, manufacturers, bad
             <th scope="col" className="num p2" title="Behind the driver ahead">
               Next
             </th>
-            <th scope="col" className="num" title="Points earned in this race">
+            <th scope="col" className="num" title="Points earned in this race (total)">
               Race
             </th>
-            {[1, 2, 3].map((n) => (
-              <th key={n} scope="col" className="num p3" title={`Stage ${n} points`}>
-                S{n}
+            <th
+              scope="col"
+              className="num p2"
+              title="Finishing-position points (projected until the checkered flag)"
+            >
+              Fin
+            </th>
+            {stageColumns.map((i) => (
+              <th key={i} scope="col" className="num p3" title={`Stage ${i + 1} points`}>
+                S{i + 1}
               </th>
             ))}
+            <th scope="col" className="num p3" title="Fastest-lap point">
+              FL
+            </th>
             {hasBonus && (
               <th scope="col" className="num p3" title="Bonus points">
                 Bonus
@@ -112,16 +126,26 @@ export function LivePointsTable({ entries, inRace, favorites, manufacturers, bad
                 <td className="num mono">{formatBehind(e.behindLeader, e.position === 1)}</td>
                 <td className="num mono p2">{formatBehind(e.behindNext, e.position === 1, '—')}</td>
                 <td className="num mono">{e.earnedThisRace || ''}</td>
-                {e.stages.map((stage, i) => (
-                  <td
-                    key={i}
-                    className={`num mono p3${stage.won ? ' stage-won' : ''}`}
-                    title={stage.won ? `Won stage ${i + 1}` : undefined}
-                  >
-                    {stage.points || ''}
-                    {stage.won && <span className="visually-hidden"> (stage winner)</span>}
-                  </td>
-                ))}
+                <td className="num mono p2">{e.finishPoints || ''}</td>
+                {stageColumns.map((i) => {
+                  const stage = e.stages[i]!;
+                  return (
+                    <td
+                      key={i}
+                      className={`num mono p3${stage.won ? ' stage-won' : ''}`}
+                      title={stage.won ? `Won stage ${i + 1}` : undefined}
+                    >
+                      {stage.points || ''}
+                      {stage.won && <span className="visually-hidden"> (stage winner)</span>}
+                    </td>
+                  );
+                })}
+                <td
+                  className="num mono p3"
+                  title={e.fastestLapPoint ? 'Fastest-lap point' : undefined}
+                >
+                  {e.fastestLapPoint ? 1 : ''}
+                </td>
                 {hasBonus && <td className="num mono p3">{e.bonusPoints || ''}</td>}
               </tr>
             );

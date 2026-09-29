@@ -30,6 +30,14 @@ export interface LivePointsEntry {
   earnedThisRace: number;
   /** Stage 1–3 points this race, and whether the driver won that stage. */
   stages: { points: number; won: boolean }[];
+  /** The race's fastest-lap bonus point. */
+  fastestLapPoint: boolean;
+  /**
+   * Points for the finishing position (projected while the race is running): what's left of
+   * this race's points after stages and the fastest-lap point. The final stage ends at the
+   * checkered flag and is scored this way, so a 3-stage race has no stage 3 points.
+   */
+  finishPoints: number;
   bonusPoints: number;
   isPointsEligible: boolean;
   wins: number;
@@ -45,6 +53,7 @@ const liveSchema = z.object({
   last_name: str,
   is_in_chase: bool,
   is_points_eligible: z.boolean().catch(true),
+  is_fastest_lap_point: bool,
   points: num,
   delta_leader: num,
   delta_next: num,
@@ -82,6 +91,15 @@ export function parseLivePoints(raw: unknown): LivePointsEntry[] {
         { points: r.stage_2_points, won: r.stage_2_winner },
         { points: r.stage_3_points, won: r.stage_3_winner },
       ],
+      fastestLapPoint: r.is_fastest_lap_point,
+      finishPoints: Math.max(
+        0,
+        r.points_earned_this_race -
+          r.stage_1_points -
+          r.stage_2_points -
+          r.stage_3_points -
+          (r.is_fastest_lap_point ? 1 : 0),
+      ),
       bonusPoints: r.bonus_points,
       isPointsEligible: r.is_points_eligible,
       wins: r.wins,
