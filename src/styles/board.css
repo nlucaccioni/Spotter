@@ -579,14 +579,6 @@
   vertical-align: middle;
 }
 
-/* Dark-colored numbers (e.g. black or navy) vanish on the dark theme, so sit them on a light
-   plate there, like a TV graphic. The light theme needs no plate. */
-:root:not([data-theme='light']) .car-badge {
-  padding: 0.06em 0.18em;
-  border-radius: 0.2em;
-  background: #e6e9ec;
-}
-
 /* ---- Footer clock ---- */
 
 .footer-clock {
@@ -599,7 +591,12 @@
   color: var(--text);
 }
 
-.footer-clock__label {
-  font-family: var(--font-ui);
+.footer-clock__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.footer-clock__item svg {
   color: var(--text-muted);
 }
