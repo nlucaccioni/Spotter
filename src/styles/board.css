@@ -419,6 +419,11 @@
   box-shadow: inset 0.25em 0 0 var(--favorite);
 }
 
+/* A faint tint of the favorite color (opaque, so sliding rows still cover cleanly). */
+.timing-table tbody tr.timing-row--favorite {
+  background: color-mix(in srgb, var(--favorite) 12%, var(--bg));
+}
+
 .timing-row--favorite .cell--driver {
   color: var(--favorite);
 }
