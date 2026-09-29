@@ -10,9 +10,10 @@
   --text: #e8e8e8;
   --text-muted: #999999;
 
-  --flag-green: #1f9d55;
+  /* Flag colors are dark enough for white banner text to pass WCAG AA (4.5:1). */
+  --flag-green: #15803d;
   --flag-yellow: #f2c200;
-  --flag-red: #d64545;
+  --flag-red: #c53030;
   --flag-white: #f5f5f5;
   --flag-checkered: #e8e8e8;
 
@@ -32,6 +33,8 @@
   --mfr-tyt: #d42a33;
   --mfr-tyt-text: #ffffff;
   --overlay: rgba(0, 0, 0, 0.55);
+  --stale-bg: #5c4400;
+  --stale-text: #ffe8a3;
   /* Opaque (blended with the background) so a flashing row that is sliding still covers others. */
   --flash-up: color-mix(in srgb, #3fb950 35%, var(--bg));
   --flash-down: color-mix(in srgb, #f0706a 35%, var(--bg));
@@ -56,9 +59,9 @@
   --personal-best: #1a7f37;
   --session-best: #8250df;
   --badge-bg: #e0e0e0;
-  --badge-contender: #9a6700;
+  --badge-contender: #6f4b00;
   --badge-pit: #0969da;
-  --favorite: #0a7d88;
+  --favorite: #086a74;
   --mfr-chv: #c9971a;
   --mfr-chv-text: #1a1406;
   --mfr-frd: #1f4e9c;
@@ -66,6 +69,8 @@
   --mfr-tyt: #c8102e;
   --mfr-tyt-text: #ffffff;
   --overlay: rgba(0, 0, 0, 0.3);
+  --stale-bg: #fff1c2;
+  --stale-text: #5c4400;
   --flash-up: color-mix(in srgb, #1a7f37 25%, var(--bg));
   --flash-down: color-mix(in srgb, #cf222e 22%, var(--bg));
 }
@@ -169,4 +174,16 @@ body {
   clip: rect(0 0 0 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Phones: let the footer wrap so the disclaimer stays readable. */
+@media (max-width: 560px) {
+  .app__footer {
+    flex-wrap: wrap;
+  }
+
+  .app__disclaimer {
+    flex-basis: 100%;
+    white-space: normal;
+  }
 }
