@@ -1,6 +1,11 @@
 import { useMemo } from 'react';
 import { standingsMoves, type LivePointsEntry } from '../../data/feeds/points.ts';
+import type { Manufacturer } from '../../data/model/types.ts';
+import type { BadgeCar } from '../../hooks/useCarBadges.ts';
 import { BADGE_LABELS, formatChange } from '../board/format.ts';
+import { CarNumber } from '../CarNumber.tsx';
+import { DriverName } from './DriverName.tsx';
+import { MfrChip } from './MfrChip.tsx';
 import { formatBehind } from './format.ts';
 
 interface Props {
@@ -8,9 +13,13 @@ interface Props {
   /** Driver ids in the session on the board; others are dimmed. */
   inRace: ReadonlySet<number>;
   favorites: ReadonlySet<string>;
+  /** By driver id, from the race on the board (the points feed has no manufacturer). */
+  manufacturers: ReadonlyMap<number, Manufacturer>;
+  /** Car-number graphic lookup when the opt-in is on, otherwise null. */
+  badgeFor: ((car: BadgeCar) => string | null) | null;
 }
 
-export function LivePointsTable({ entries, inRace, favorites }: Props) {
+export function LivePointsTable({ entries, inRace, favorites, manufacturers, badgeFor }: Props) {
   const moves = useMemo(() => standingsMoves(entries), [entries]);
   const moveOf = new Map(entries.map((e, i) => [e, moves[i]!]));
   // Drivers with points or in today's race; the feed also lists everyone with a license.
@@ -35,6 +44,9 @@ export function LivePointsTable({ entries, inRace, favorites }: Props) {
               #
             </th>
             <th scope="col">Driver</th>
+            <th scope="col" className="p3">
+              Mfr
+            </th>
             <th scope="col" className="num">
               Points
             </th>
@@ -75,9 +87,11 @@ export function LivePointsTable({ entries, inRace, favorites }: Props) {
                 >
                   {formatChange(change)}
                 </td>
-                <td className="num muted">{e.carNumber || '—'}</td>
+                <td className="num muted">
+                  <CarNumber number={e.carNumber || '—'} badgeUrl={badgeFor?.(e) ?? null} />
+                </td>
                 <td className="points-driver">
-                  {e.name.full}
+                  <DriverName name={e.name} />
                   {e.name.badges.map((b) => (
                     <span
                       key={b}
@@ -88,6 +102,11 @@ export function LivePointsTable({ entries, inRace, favorites }: Props) {
                       {BADGE_LABELS[b].short}
                     </span>
                   ))}
+                </td>
+                <td className="p3">
+                  <MfrChip
+                    manufacturer={e.driverId === null ? undefined : manufacturers.get(e.driverId)}
+                  />
                 </td>
                 <td className="num mono strong">{e.points}</td>
                 <td className="num mono">{formatBehind(e.behindLeader, e.position === 1)}</td>

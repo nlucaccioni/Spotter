@@ -6,7 +6,6 @@ import {
   parseDrivers,
   type BadgeIndex,
 } from '../data/feeds/drivers.ts';
-import type { CarState } from '../data/model/types.ts';
 import { createBrowserFetcher } from '../data/sources/browserFetcher.ts';
 
 // The driver list is large and rarely changes, so it's fetched once per page, and only when
@@ -24,11 +23,18 @@ function loadBadgeIndex(): Promise<BadgeIndex> {
   return loading;
 }
 
+/** What the badge lookup needs from a row: board cars and points rows both have it. */
+export interface BadgeCar {
+  driverId: number | null;
+  name: { full: string };
+  carNumber: string;
+}
+
 /** Returns a lookup for car-number graphics, or null when the option is off. */
 export function useCarBadges(
   enabled: boolean,
   seriesId: number | null,
-): ((car: CarState) => string | null) | null {
+): ((car: BadgeCar) => string | null) | null {
   const [index, setIndex] = useState<BadgeIndex>(EMPTY_BADGE_INDEX);
 
   useEffect(() => {
@@ -43,7 +49,7 @@ export function useCarBadges(
   }, [enabled]);
 
   const lookup = useCallback(
-    (car: CarState) => badgeUrlFor(index, car, seriesId),
+    (car: BadgeCar) => badgeUrlFor(index, car, seriesId),
     [index, seriesId],
   );
   return enabled ? lookup : null;

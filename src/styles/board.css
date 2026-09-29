@@ -956,3 +956,18 @@
     display: none;
   }
 }
+
+/* Driver names shorten on narrow tables, like the board ("K. Larson"). */
+.points-table .name-short {
+  display: none;
+}
+
+@container (max-width: 560px) {
+  .points-table .name-full {
+    display: none;
+  }
+
+  .points-table .name-short {
+    display: inline;
+  }
+}

@@ -1,6 +1,7 @@
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { formatGap } from '../data/model/gaps.ts';
 import type { CarState } from '../data/model/types.ts';
+import { CarNumber } from './CarNumber.tsx';
 import {
   BADGE_LABELS,
   formatChange,
@@ -242,26 +243,4 @@ function Cell({
       );
     }
   }
-}
-
-/** Badge URLs that failed to load this session, so rows don't keep retrying them. */
-const failedBadges = new Set<string>();
-
-function CarNumber({ number, badgeUrl }: { number: string; badgeUrl: string | null }) {
-  const [failed, setFailed] = useState(false);
-  if (!badgeUrl || failed || failedBadges.has(badgeUrl)) return <>{number}</>;
-  return (
-    <img
-      className="car-badge"
-      src={badgeUrl}
-      alt={number}
-      title={`#${number}`}
-      decoding="async"
-      referrerPolicy="no-referrer"
-      onError={() => {
-        failedBadges.add(badgeUrl);
-        setFailed(true);
-      }}
-    />
-  );
 }

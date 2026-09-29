@@ -1,13 +1,18 @@
 import type { SeasonStanding } from '../../data/feeds/points.ts';
-import { formatManufacturer } from '../board/format.ts';
+import type { BadgeCar } from '../../hooks/useCarBadges.ts';
+import { CarNumber } from '../CarNumber.tsx';
+import { DriverName } from './DriverName.tsx';
+import { MfrChip } from './MfrChip.tsx';
 import { formatBehind } from './format.ts';
 
 interface Props {
   standings: SeasonStanding[];
   favorites: ReadonlySet<string>;
+  /** Car-number graphic lookup when the opt-in is on, otherwise null. */
+  badgeFor: ((car: BadgeCar) => string | null) | null;
 }
 
-export function SeasonStandingsTable({ standings, favorites }: Props) {
+export function SeasonStandingsTable({ standings, favorites, badgeFor }: Props) {
   // The feed lists everyone with a license; show drivers who have raced.
   const rows = standings.filter((s) => s.points > 0 || s.starts > 0);
   return (
@@ -23,7 +28,7 @@ export function SeasonStandingsTable({ standings, favorites }: Props) {
               #
             </th>
             <th scope="col">Driver</th>
-            <th scope="col" className="p3">
+            <th scope="col" className="p2">
               Mfr
             </th>
             <th scope="col" className="num">
@@ -67,16 +72,14 @@ export function SeasonStandingsTable({ standings, favorites }: Props) {
                 className={favorite ? 'timing-row--favorite' : undefined}
               >
                 <td className="num strong">{s.position}</td>
-                <td className="num muted">{s.carNumber || '—'}</td>
-                <td className="points-driver">{s.name.full}</td>
-                <td className="p3" title={s.manufacturer.name}>
-                  {s.manufacturer.code ? (
-                    <span className={`mfr-chip mfr-chip--${s.manufacturer.code.toLowerCase()}`}>
-                      {formatManufacturer(s.manufacturer.name)}
-                    </span>
-                  ) : (
-                    s.manufacturer.name
-                  )}
+                <td className="num muted">
+                  <CarNumber number={s.carNumber || '—'} badgeUrl={badgeFor?.(s) ?? null} />
+                </td>
+                <td className="points-driver">
+                  <DriverName name={s.name} />
+                </td>
+                <td className="p2">
+                  <MfrChip manufacturer={s.manufacturer} />
                 </td>
                 <td className="num mono strong">{s.points}</td>
                 <td className="num mono">{formatBehind(s.behindLeader, s.position === 1)}</td>

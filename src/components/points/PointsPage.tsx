@@ -6,7 +6,8 @@ import {
   seasonPointsUrl,
 } from '../../data/feeds/points.ts';
 import { seriesFromId } from '../../data/model/lookups.ts';
-import type { Session } from '../../data/model/types.ts';
+import type { Manufacturer, Session } from '../../data/model/types.ts';
+import { useCarBadges } from '../../hooks/useCarBadges.ts';
 import { usePolledFeed, type PolledFeed } from '../../hooks/usePolledFeed.ts';
 import { usePreferences } from '../../hooks/usePreferences.ts';
 import { formatDuration } from '../board/format.ts';
@@ -49,6 +50,15 @@ export function PointsPage({ session, delaySeconds }: Props) {
   );
 
   const favorites = useMemo(() => new Set(prefs.favorites), [prefs.favorites]);
+  const badgeFor = useCarBadges(prefs.showCarBadges, tab === 'live' ? liveSeries : seasonSeries);
+  // The live points feed has no manufacturer; take it from the race on the board.
+  const manufacturers = useMemo(
+    () =>
+      new Map<number, Manufacturer>(
+        session?.cars.flatMap((c) => (c.driverId === null ? [] : [[c.driverId, c.manufacturer]])),
+      ),
+    [session],
+  );
   const inRace = useMemo(
     () => new Set(session?.cars.flatMap((c) => (c.driverId === null ? [] : [c.driverId]))),
     [session],
@@ -69,7 +79,16 @@ export function PointsPage({ session, delaySeconds }: Props) {
           <h1>Points</h1>
           <span className="muted">{subtitle}</span>
         </div>
+        {/* The view tabs always sit at the far right; the series picker goes to their left. */}
         <div className="points__controls">
+          {tab === 'season' && (
+            <Segmented
+              label="Series"
+              options={SERIES_IDS.map((id) => [id, SERIES_SHORT[id]!] as const)}
+              value={seasonSeries}
+              onChange={setPickedSeries}
+            />
+          )}
           <Segmented
             label="View"
             options={[
@@ -79,14 +98,6 @@ export function PointsPage({ session, delaySeconds }: Props) {
             value={tab}
             onChange={setTab}
           />
-          {tab === 'season' && (
-            <Segmented
-              label="Series"
-              options={SERIES_IDS.map((id) => [id, SERIES_SHORT[id]!] as const)}
-              value={seasonSeries}
-              onChange={setPickedSeries}
-            />
-          )}
         </div>
       </header>
 
@@ -94,10 +105,16 @@ export function PointsPage({ session, delaySeconds }: Props) {
 
       <div className="points__body">
         {tab === 'live' && live.data && (
-          <LivePointsTable entries={live.data} inRace={inRace} favorites={favorites} />
+          <LivePointsTable
+            entries={live.data}
+            inRace={inRace}
+            favorites={favorites}
+            manufacturers={manufacturers}
+            badgeFor={badgeFor}
+          />
         )}
         {tab === 'season' && season.data && (
-          <SeasonStandingsTable standings={season.data} favorites={favorites} />
+          <SeasonStandingsTable standings={season.data} favorites={favorites} badgeFor={badgeFor} />
         )}
       </div>
     </main>
