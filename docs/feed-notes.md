@@ -36,12 +36,17 @@ See `PROJECT_BRIEF.md` §3 for the baseline. Add a dated entry whenever somethin
 
 ## CORS checks
 
-| Feed                                         | CORS OK?                                         | Date checked |
-| -------------------------------------------- | ------------------------------------------------ | ------------ |
-| `cacher/drivers.json`                        | Yes (`Access-Control-Allow-Origin: *`)           | 2026-09-28   |
-| `data/images/carbadges/<series>/<badge>.png` | Yes (`Access-Control-Allow-Origin: *`)           | 2026-09-28   |
-| `cacher/2026/1/5628/weekend-feed.json`       | Yes (`Access-Control-Allow-Origin: *`)           | 2026-09-28   |
-| `live/feeds/live-feed.json`                  | Yes (`Access-Control-Allow-Origin: *`, GET/HEAD) | 2026-09-27   |
+| Feed                                                      | CORS OK?                                         | Date checked |
+| --------------------------------------------------------- | ------------------------------------------------ | ------------ |
+| `live/feeds/live-points.json`                             | Yes (`*`)                                        | 2026-09-28   |
+| `cacher/{year}/{series}/points-feed.json`                 | Yes (`*`)                                        | 2026-09-28   |
+| `cacher/{year}/{series}/racinginsights-points-feed.json`  | Yes (`*`)                                        | 2026-09-28   |
+| `cacher/{year}/{series}/{race_id}/live-stage-points.json` | Yes (`*`)                                        | 2026-09-28   |
+| `racing-insights/raw-feed/{race_id}-NCS.json`             | Yes (`*`)                                        | 2026-09-28   |
+| `cacher/drivers.json`                                     | Yes (`Access-Control-Allow-Origin: *`)           | 2026-09-28   |
+| `data/images/carbadges/<series>/<badge>.png`              | Yes (`Access-Control-Allow-Origin: *`)           | 2026-09-28   |
+| `cacher/2026/1/5628/weekend-feed.json`                    | Yes (`Access-Control-Allow-Origin: *`)           | 2026-09-28   |
+| `live/feeds/live-feed.json`                               | Yes (`Access-Control-Allow-Origin: *`, GET/HEAD) | 2026-09-27   |
 
 ## Log
 
@@ -97,3 +102,18 @@ each car's lap count when it's seen leaving pit road and shows OUT until that co
   number; it isn't always (a Truck entry had `4237`), and each driver has one entry for their
   main series.
 - Used only by the opt-in "Team car-number graphics" setting (hotlinked, not hosted by us).
+
+### 2026-09-28 — Points feeds
+
+- `live/feeds/live-points.json` (also served at `live/feeds/series_1/{race_id}/live_points.json`
+  and `cacher/live/series_1/{race_id}/live-points.json`): live points for the current session.
+  58 entries: everyone with a license, including non-eligible drivers with 0 points. Per driver:
+  `points_position`, `points`, `delta_leader`/`delta_next` (negative), `points_earned_this_race`,
+  `stage_{1,2,3}_points` and `_winner`, `bonus_points`, `is_points_eligible`, `is_in_chase`,
+  and season wins/top 5/top 10. `series_id`/`race_id` are 0, so the series comes from the live feed.
+  Names carry the same (C)/(i)/# markers as the live feed.
+- `cacher/{year}/{series}/points-feed.json`: season standings. `position`, `points`,
+  `points_earned` (last race), deltas, starts, wins, top 5/10, stage wins by stage, laps led, DNF,
+  playoff fields, `manufacturer` as a full name, and `driver_suffix` written `Jr` (no period).
+  Tied drivers can be listed in a different order than in live-points.
+- `racinginsights-points-feed.json` is similar, with `PrevWeekPointsPos` and `PosGL`; not used yet.

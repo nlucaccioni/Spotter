@@ -10,6 +10,12 @@ export function manufacturerFromCode(code: string): Manufacturer {
   return { code, name: MANUFACTURERS[code] ?? (code || 'Unknown') };
 }
 
+/** For feeds that give the full name ("Chevrolet") instead of the code. */
+export function manufacturerFromName(name: string): Manufacturer {
+  const code = Object.keys(MANUFACTURERS).find((c) => MANUFACTURERS[c] === name.trim());
+  return code ? { code, name: MANUFACTURERS[code]! } : { code: '', name: name.trim() || 'Unknown' };
+}
+
 const SERIES: Record<number, string> = {
   1: 'Cup Series',
   2: "O'Reilly Auto Parts Series",
