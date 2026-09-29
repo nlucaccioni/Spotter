@@ -237,7 +237,7 @@ function Cell({
     case 'status': {
       const status = formatStatus(car);
       return (
-        <td className={`${align} cell--mono`} title={status.title}>
+        <td className={`${align} cell--mono col-status`} title={status.title}>
           {status.label}
         </td>
       );

@@ -240,6 +240,13 @@
   font-size: 0.7em;
 }
 
+/* Status is the only left-aligned column after a right-aligned one (Pits), so the texts face
+   each other across just the cell padding. Extra room brings that gap up to match the gaps
+   between the number columns (~1.15em). */
+.timing-table .col-status {
+  padding-left: 1.03em;
+}
+
 .cell--pos {
   font-weight: 700;
 }

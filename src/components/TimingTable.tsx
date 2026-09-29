@@ -100,7 +100,7 @@ export function TimingTable({
                       <th
                         key={c.id}
                         scope="col"
-                        className={`cell--${c.align}`}
+                        className={`cell--${c.align} col-${c.id}`}
                         aria-sort={
                           active
                             ? sort.direction === 'asc'
