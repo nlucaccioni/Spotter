@@ -314,6 +314,12 @@ Pos · ± (position change since start or last N laps) · Car # · Driver (with 
 **Later milestones:** verify CORS on the other feeds → schedule/points pages → lap charts from lap-times → racing-insights gaps → TV delay slider → Tauri desktop wrapper (new fetcher implementation only).
 
 - **TV delay:** ✅ Done 2026-09-28, as a − / value / + stepper rather than a slider (owner preference). It's in Settings, 0–900 s, typed or stepped (Shift = 10 s), saved with the other preferences. Polling isn't slowed; snapshots are held in `src/data/delayBuffer.ts` and released when they're `delay` old. Events, position flashes and slides therefore follow the delayed data, while connection status and the stale warning stay real-time. The footer shows the delay (timer icon) next to the current time and last update. With a delay set, a fresh page shows "Holding the board for your TV delay" until the first update is due.
+- **Points page:** ✅ Done 2026-09-28, at `#/points` (hash routing). Timing and Points buttons in the footer switch pages. There are two tabs:
+  - **Live race** (`live/feeds/live-points.json`, polled every 15 s): position, places gained or lost this race, points, gap to leader and to next, points earned this race, and stage 1–3 points (stage winners highlighted). Moves compare pre-race points (total minus earned) with current points, ranking ties equally, so tied drivers don't show false swaps. Drivers not in the session on the board are dimmed.
+  - **Season** (`cacher/{year}/{series}/points-feed.json`, every 2 min): the championship table with a Cup / O'Reilly / Truck switcher, plus wins, top 5/10, stage wins, laps led, DNF and starts.
+
+  Both tabs follow the TV delay and highlight favorites, and columns drop out by width using container queries. `usePolledFeed` wraps the same polling engine (jitter, backoff, pause when hidden) for these feeds.
+
 - **Racing-insights gaps (checked 2026-09-28, not built):** `racing-insights/raw-feed/{race_id}-NCS.json` (CORS: *) gives the same `Delta` as the live feed, and `DeltaNext` matched our computed interval for all 25 cars with a time or lap gap in the Kansas final. The other 11 are lapped cars on the same lap as the car ahead: NASCAR shows "0L" where we show "—". So official gaps add no precision. The feed is still valuable for pit stop times, tires, laps since pit, positions gained over recent laps, average lap times, stage finishes and `PointsThisRace`.
 
 ---

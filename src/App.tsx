@@ -5,8 +5,10 @@ import { FeedStatusScreen } from './components/FeedStatusScreen.tsx';
 import { Controls } from './components/Controls.tsx';
 import { FooterClock } from './components/FooterClock.tsx';
 import { EventTicker } from './components/EventTicker.tsx';
+import { PointsPage } from './components/points/PointsPage.tsx';
 import { SettingsDrawer } from './components/SettingsDrawer.tsx';
 import { useDisplayMode } from './hooks/useDisplayMode.ts';
+import { useHashRoute } from './hooks/useHashRoute.ts';
 import { setLiveDelaySeconds, useLiveSession } from './hooks/useLiveSession.ts';
 import { useApplyTheme, usePreferences } from './hooks/usePreferences.ts';
 
@@ -31,6 +33,7 @@ export default function App() {
   useEffect(() => setLiveDelaySeconds(prefs.delaySeconds), [prefs.delaySeconds]);
   useApplyTheme();
 
+  const [route, navigate] = useHashRoute();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
 
@@ -40,7 +43,11 @@ export default function App() {
 
   return (
     <div className={`app${idle ? ' app--idle' : ''}`}>
-      {session ? (
+      {route === 'points' ? (
+        <ErrorBoundary>
+          <PointsPage session={session} delaySeconds={delaySeconds} />
+        </ErrorBoundary>
+      ) : session ? (
         <>
           <ErrorBoundary>
             <Board
@@ -74,6 +81,8 @@ export default function App() {
         <FooterClock lastUpdated={lastUpdated} delaySeconds={delaySeconds} />
         {/* In the footer so they never cover timing data. */}
         <Controls
+          route={route}
+          onNavigate={navigate}
           fullscreen={display.fullscreen}
           canFullscreen={display.canFullscreen}
           onToggleFullscreen={display.toggleFullscreen}
