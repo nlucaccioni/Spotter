@@ -96,6 +96,8 @@ export const LIMITS = {
 export interface LayoutOptions {
   extraRows?: number;
   hidden?: ReadonlySet<ColumnId>;
+  /** Allow two side-by-side tables on landscape screens (default true). */
+  allowSplit?: boolean;
 }
 
 export interface BoardLayout {
@@ -105,7 +107,15 @@ export interface BoardLayout {
   scroll: boolean;
   columns: ColumnDef[];
   nameFormat: NameFormat;
+  /** Field split into two side-by-side tables (landscape; PROJECT_BRIEF.md §5.1). */
+  split: boolean;
 }
+
+/** Horizontal gap between the two tables of a split layout. */
+export const SPLIT_GAP_PX = 16;
+
+/** Width a vertical scrollbar can take when the table has to scroll (desktop browsers). */
+export const SCROLLBAR_PX = 16;
 
 /**
  * @param width  available width in CSS px
@@ -114,13 +124,32 @@ export interface BoardLayout {
  * @param carCount number of rows in the field
  * @param options.extraRows other elements sized as one row each, e.g. the flag banner
  * @param options.hidden columns the user turned off; their width goes to the others
+ * @param options.allowSplit whether a landscape screen may use two side-by-side tables
  */
 export function computeBoardLayout(
   width: number,
   height: number,
   carCount: number,
-  { extraRows = 0, hidden = new Set<ColumnId>() }: LayoutOptions = {},
+  { extraRows = 0, hidden = new Set<ColumnId>(), allowSplit = true }: LayoutOptions = {},
 ): BoardLayout {
+  const single = fitTable(width, height, carCount, extraRows, hidden);
+  if (!allowSplit || width <= height || carCount < 2) return { ...single, split: false };
+
+  // Landscape: two tables of half the field each get taller rows (bigger text). Use them when
+  // that's at least as readable and still fits the essential columns with short names.
+  const halfWidth = (width - SPLIT_GAP_PX) / 2;
+  const split = fitTable(halfWidth, height, Math.ceil(carCount / 2), extraRows, hidden);
+  const usable = split.nameFormat !== 'last' && split.fontSizePx >= single.fontSizePx;
+  return usable ? { ...split, split: true } : { ...single, split: false };
+}
+
+function fitTable(
+  width: number,
+  height: number,
+  carCount: number,
+  extraRows: number,
+  hidden: ReadonlySet<ColumnId>,
+): Omit<BoardLayout, 'split'> {
   const rows = Math.max(1, carCount) + 1 + extraRows; // + table header row
   const fitted = Math.floor(height / rows);
   const scroll = fitted < LIMITS.minRowPx;
@@ -131,7 +160,7 @@ export function computeBoardLayout(
     LIMITS.maxFontPx,
   );
 
-  const available = width / fontSizePx;
+  const available = (scroll ? width - SCROLLBAR_PX : width) / fontSizePx;
   const chosen = new Set<ColumnId>(
     COLUMNS.filter((c) => c.priority === 1 && !hidden.has(c.id)).map((c) => c.id),
   );

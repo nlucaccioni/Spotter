@@ -6,8 +6,9 @@ import {
   type ColumnId,
 } from '../../src/components/board/layout.ts';
 
+// Single-table layout, so column behaviour can be checked across any width.
 const ids = (width: number, height: number, cars = 40) =>
-  computeBoardLayout(width, height, cars).columns.map((c) => c.id);
+  computeBoardLayout(width, height, cars, { allowSplit: false }).columns.map((c) => c.id);
 
 const ALWAYS = ['pos', 'car', 'driver', 'gap', 'interval', 'last'];
 
@@ -25,7 +26,7 @@ describe('computeBoardLayout — fitting the field', () => {
   });
 
   it('falls back to scrolling instead of shrinking below the minimum readable size', () => {
-    const layout = computeBoardLayout(1080, 500, 40);
+    const layout = computeBoardLayout(1080, 500, 40, { allowSplit: false });
     expect(layout).toMatchObject({ scroll: true, rowHeightPx: LIMITS.minRowPx });
     expect(layout.fontSizePx).toBeGreaterThanOrEqual(LIMITS.minFontPx);
   });
@@ -112,5 +113,43 @@ describe('computeBoardLayout — hidden columns', () => {
     expect(before).not.toContain('status');
     expect(after.length).toBeGreaterThanOrEqual(before.length - 2);
     expect(after).toContain('mfr');
+  });
+});
+
+describe('computeBoardLayout — landscape split', () => {
+  it('never splits a portrait screen', () => {
+    expect(computeBoardLayout(1080, 1750, 40).split).toBe(false);
+  });
+
+  it('splits a landscape screen into two tables with bigger text', () => {
+    const single = computeBoardLayout(1920, 950, 40, { allowSplit: false });
+    const split = computeBoardLayout(1920, 950, 40);
+    expect(split.split).toBe(true);
+    expect(split.rowHeightPx).toBe(Math.floor(950 / 21));
+    expect(split.fontSizePx).toBeGreaterThan(single.fontSizePx);
+    expect(split.nameFormat).not.toBe('last');
+  });
+
+  it('avoids scrolling on a short landscape window', () => {
+    const layout = computeBoardLayout(1080, 500, 40);
+    expect(layout).toMatchObject({ split: true, scroll: false });
+  });
+
+  it("stays single when half the width can't fit the essential columns", () => {
+    expect(computeBoardLayout(700, 600, 40).split).toBe(false);
+  });
+
+  it('can be turned off', () => {
+    expect(computeBoardLayout(1920, 950, 40, { allowSplit: false }).split).toBe(false);
+  });
+});
+
+describe('computeBoardLayout — scrolling', () => {
+  it('leaves room for a scrollbar when the table has to scroll', () => {
+    // 386px at the 12px minimum font is ~32.2em: enough for Best (needs 31.4em) only if the
+    // scrollbar's width is ignored. The table scrolls here, so Best must be left out.
+    const layout = computeBoardLayout(386, 600, 40, { allowSplit: false });
+    expect(layout).toMatchObject({ scroll: true, fontSizePx: LIMITS.minFontPx });
+    expect(layout.columns.map((c) => c.id)).not.toContain('best');
   });
 });
