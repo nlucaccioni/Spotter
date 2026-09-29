@@ -35,8 +35,8 @@ describe('format helpers', () => {
   it('formats lap times and position changes', () => {
     expect(formatLapTime(30.076)).toBe('30.076');
     expect(formatLapTime(undefined)).toBe('—');
-    expect(formatChange(3)).toBe('▲3');
-    expect(formatChange(-2)).toBe('▼2');
+    expect(formatChange(3)).toBe('▴3');
+    expect(formatChange(-2)).toBe('▾2');
     expect(formatChange(0)).toBe('–');
     expect(formatChange(null)).toBe('—');
   });

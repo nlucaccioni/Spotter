@@ -7,8 +7,8 @@ export function formatLapTime(seconds: number | undefined): string {
 
 export function formatChange(gained: number | null): string {
   if (gained === null) return '—';
-  if (gained > 0) return `▲${gained}`;
-  if (gained < 0) return `▼${-gained}`;
+  if (gained > 0) return `▴${gained}`;
+  if (gained < 0) return `▾${-gained}`;
   return '–';
 }
 
