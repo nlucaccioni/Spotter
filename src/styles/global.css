@@ -30,6 +30,8 @@
   --mfr-chv: #d4a72c;
   --mfr-frd: #5b8def;
   --mfr-tyt: #ef5a5a;
+  /* RAM: chrome silver (red is taken by Toyota). */
+  --mfr-ram: #b9bec7;
   --mfr-text: #111111;
   --overlay: rgba(0, 0, 0, 0.55);
   --stale-bg: #5c4400;
@@ -65,6 +67,7 @@
   --mfr-chv: #876200;
   --mfr-frd: #1f4e9c;
   --mfr-tyt: #c8102e;
+  --mfr-ram: #3f4652;
   --mfr-text: #ffffff;
   /* Plate behind car-number graphics in the light theme only. */
   --badge-plate: #cfcfcf;

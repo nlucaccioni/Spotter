@@ -86,6 +86,7 @@ const PAIRS: [string, string, string, number][] = [
   ['Chevy chip', '--mfr-text', '--mfr-chv', TEXT],
   ['Ford chip', '--mfr-text', '--mfr-frd', TEXT],
   ['Toyota chip', '--mfr-text', '--mfr-tyt', TEXT],
+  ['RAM chip', '--mfr-text', '--mfr-ram', TEXT],
   ['stale warning', '--stale-text', '--stale-bg', TEXT],
   ['text on gain flash', '--text', '--flash-up', TEXT],
   ['text on loss flash', '--text', '--flash-down', TEXT],

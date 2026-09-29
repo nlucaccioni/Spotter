@@ -108,5 +108,6 @@ describe('helpers', () => {
     expect(seasonPointsUrl(2026, 3)).toBe('https://cf.nascar.com/cacher/2026/3/points-feed.json');
     expect(manufacturerFromName('Toyota')).toEqual({ code: 'Tyt', name: 'Toyota' });
     expect(manufacturerFromName('Dodge')).toEqual({ code: '', name: 'Dodge' });
+    expect(manufacturerFromName('RAM')).toEqual({ code: 'Ram', name: 'RAM' });
   });
 });

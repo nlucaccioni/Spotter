@@ -26,6 +26,7 @@ const MANUFACTURER_SHORT: Record<string, string> = {
   Chevrolet: 'Chevy',
   Ford: 'Ford',
   Toyota: 'Toyota',
+  RAM: 'RAM',
 };
 
 export function formatManufacturer(name: string): string {

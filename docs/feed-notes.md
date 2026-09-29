@@ -117,3 +117,11 @@ each car's lap count when it's seen leaving pit road and shows OUT until that co
   playoff fields, `manufacturer` as a full name, and `driver_suffix` written `Jr` (no period).
   Tied drivers can be listed in a different order than in live-points.
 - `racinginsights-points-feed.json` is similar, with `PrevWeekPointsPos` and `PosGL`; not used yet.
+
+### 2026-09-28 — RAM (Truck Series)
+
+- RAM is spelled `RAM` in `points-feed.json` (`manufacturer`) and `weekend-feed.json` (`car_make`,
+  `manufacturer`); 18 Truck drivers in the 2026 standings.
+- **To confirm during a live Truck session:** the live feed's `vehicle_manufacturer` code for RAM
+  (the others are `Chv`, `Frd`, `Tyt`). The board accepts `Ram`, `RAM` and `Rm`; anything else
+  shows as plain text until it's added in `src/data/model/lookups.ts`.

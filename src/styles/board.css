@@ -570,7 +570,8 @@
 
 .mfr-chip--chv,
 .mfr-chip--frd,
-.mfr-chip--tyt {
+.mfr-chip--tyt,
+.mfr-chip--ram {
   color: var(--mfr-text);
 }
 
@@ -584,6 +585,10 @@
 
 .mfr-chip--tyt {
   background: var(--mfr-tyt);
+}
+
+.mfr-chip--ram {
+  background: var(--mfr-ram);
 }
 
 /* Light theme: frame the car-number graphics, since white numbers (e.g. #24) vanish on the

@@ -7,6 +7,10 @@ describe('manufacturerFromCode', () => {
     expect(manufacturerFromCode('Frd').name).toBe('Ford');
     expect(manufacturerFromCode('Tyt').name).toBe('Toyota');
     expect(manufacturerFromCode('Dge').name).toBe('Dge');
+    // RAM's live-feed code isn't confirmed; the likely spellings all map to it.
+    for (const code of ['Ram', 'RAM', 'Rm', ' ram ']) {
+      expect(manufacturerFromCode(code)).toEqual({ code: 'Ram', name: 'RAM' });
+    }
     expect(manufacturerFromCode('').name).toBe('Unknown');
   });
 });
