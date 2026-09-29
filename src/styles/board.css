@@ -546,14 +546,15 @@
 
 .mfr-chip {
   display: inline-block;
-  padding: 0.14em 0.36em;
-  border-radius: 0.25em;
+  padding: 0.18em 0.6em;
+  border-radius: 999px;
   background: var(--badge-bg);
   color: var(--text);
-  font-size: 0.64em;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  font-family: var(--font-mono);
+  font-size: 0.62em;
+  font-weight: 600;
   line-height: 1;
+  text-transform: uppercase;
   vertical-align: 0.15em;
 }
 
