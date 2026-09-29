@@ -65,7 +65,7 @@ export const COLUMNS: readonly ColumnDef[] = [
     widthEm: 4.4,
     align: 'right',
   },
-  { id: 'status', label: 'Status', title: 'Status', priority: 3, widthEm: 4.8, align: 'left' },
+  { id: 'status', label: 'Status', title: 'Status', priority: 3, widthEm: 3.6, align: 'left' },
 ];
 
 /** Order in which optional columns are added as width allows. */

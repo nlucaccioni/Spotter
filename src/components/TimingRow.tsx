@@ -79,7 +79,6 @@ export const TimingRow = memo(function TimingRow({
           nameFormat={nameFormat}
           sessionBest={sessionBest}
           sessionFinished={sessionFinished}
-          favorite={favorite}
           onOutLap={onOutLap}
         />
       ))}
@@ -93,12 +92,8 @@ function Cell({
   nameFormat,
   sessionBest,
   sessionFinished,
-  favorite,
   onOutLap,
-}: Pick<
-  Props,
-  'car' | 'nameFormat' | 'sessionBest' | 'sessionFinished' | 'favorite' | 'onOutLap'
-> & {
+}: Pick<Props, 'car' | 'nameFormat' | 'sessionBest' | 'sessionFinished' | 'onOutLap'> & {
   column: ColumnDef;
 }) {
   const align = `cell--${column.align}`;
@@ -118,11 +113,6 @@ function Cell({
     case 'driver':
       return (
         <td className={`${align} cell--driver`} title={`${car.name.full} · ${car.sponsor}`}>
-          {favorite && (
-            <span className="favorite-star" title="Favorite" aria-label="Favorite">
-              ★
-            </span>
-          )}
           <span className="driver-name">{formatName(car.name, nameFormat)}</span>
           {car.name.badges.map((badge) => (
             <span
@@ -145,7 +135,11 @@ function Cell({
     case 'mfr':
       return (
         <td className={align} title={car.manufacturer.name}>
-          {formatManufacturer(car.manufacturer.name)}
+          <span
+            className={`mfr-chip mfr-chip--${car.manufacturer.code.toLowerCase() || 'unknown'}`}
+          >
+            {formatManufacturer(car.manufacturer.name)}
+          </span>
         </td>
       );
 
@@ -227,7 +221,13 @@ function Cell({
       );
     }
 
-    case 'status':
-      return <td className={align}>{formatStatus(car)}</td>;
+    case 'status': {
+      const status = formatStatus(car);
+      return (
+        <td className={`${align} cell--mono`} title={status.title}>
+          {status.label}
+        </td>
+      );
+    }
   }
 }

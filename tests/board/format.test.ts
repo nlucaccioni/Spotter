@@ -48,9 +48,14 @@ describe('format helpers', () => {
   });
 
   it('describes status and marks cars out of the race', () => {
-    expect(formatStatus(larson)).toBe('Run');
+    expect(formatStatus(larson)).toEqual({ label: 'RUN', title: 'Running' });
+    expect(formatStatus({ ...larson, isOnTrack: false }).label).toBe('OFF');
+    expect(formatStatus({ ...larson, statusCode: 7 })).toEqual({
+      label: 'S7',
+      title: 'Unknown status code 7',
+    });
     const out = result.session.cars.find((c) => c.carNumber === '4')!;
-    expect(formatStatus(out)).toBe('Out');
+    expect(formatStatus(out).label).toBe('OUT');
     expect(isOut(out)).toBe(true);
     expect(isOut(larson)).toBe(false);
   });

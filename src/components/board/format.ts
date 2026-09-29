@@ -32,10 +32,16 @@ export function formatManufacturer(name: string): string {
   return MANUFACTURER_SHORT[name] ?? name;
 }
 
-export function formatStatus(car: CarState): string {
-  if (car.statusCode === 1) return car.isOnTrack ? 'Run' : 'Off track';
-  if (car.statusCode === 3) return 'Out';
-  return car.statusCode === null ? '—' : `Status ${car.statusCode}`;
+/** Short monospace status label, with the full meaning for a tooltip. */
+export function formatStatus(car: CarState): { label: string; title: string } {
+  if (car.statusCode === 1) {
+    return car.isOnTrack
+      ? { label: 'RUN', title: 'Running' }
+      : { label: 'OFF', title: 'Not on track' };
+  }
+  if (car.statusCode === 3) return { label: 'OUT', title: 'Out of the race' };
+  if (car.statusCode === null) return { label: '—', title: 'No status' };
+  return { label: `S${car.statusCode}`, title: `Unknown status code ${car.statusCode}` };
 }
 
 export function isOut(car: CarState): boolean {
