@@ -1,4 +1,4 @@
-import { CloudOff, LoaderCircle, RefreshCw } from 'lucide-react';
+import { CloudOff, LoaderCircle, RefreshCw, Timer } from 'lucide-react';
 import type { PollStatus } from '../data/polling/poller.ts';
 import { useNow } from '../hooks/useNow.ts';
 import { formatDuration } from './board/format.ts';
@@ -8,12 +8,27 @@ interface Props {
   error: Error | null;
   nextPollAt: number | null;
   onRetry: () => void;
+  /** Data has arrived but is held for the TV delay until this time. */
+  holdingUntil?: number | null;
 }
 
 /** Full-screen state before any data has arrived: connecting, or the feed can't be reached. */
-export function FeedStatusScreen({ status, error, nextPollAt, onRetry }: Props) {
+export function FeedStatusScreen({ status, error, nextPollAt, onRetry, holdingUntil }: Props) {
   const now = useNow();
   const failed = status === 'error';
+
+  if (holdingUntil != null && !failed) {
+    return (
+      <main className="feed-status">
+        <Timer className="feed-status__icon" aria-hidden="true" />
+        <h1>Holding the board for your TV delay</h1>
+        <p className="feed-status__text">
+          First update in {formatDuration(Math.max(0, holdingUntil - now))}. You can change the
+          delay in Settings.
+        </p>
+      </main>
+    );
+  }
 
   if (!failed) {
     return (

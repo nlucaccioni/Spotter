@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  clampDelay,
   DEFAULT_PREFERENCES,
   favoriteKey,
+  parseDelayInput,
   parsePreferences,
   toggleInList,
   TOGGLEABLE_COLUMNS,
@@ -32,6 +34,7 @@ describe('parsePreferences', () => {
       favorites: ['id:4030', 'name:Kyle Larson'],
       pinFavorites: true,
       showCarBadges: false,
+      delaySeconds: 0,
     });
   });
 
@@ -110,5 +113,28 @@ describe('createPreferencesStore', () => {
 
     events.dispatchEvent(Object.assign(new Event('storage'), { key: 'something-else' }));
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('TV delay values', () => {
+  it('parses typed input, tolerating a trailing s and whitespace', () => {
+    expect(parseDelayInput('30')).toBe(30);
+    expect(parseDelayInput(' 45s ')).toBe(45);
+    expect(parseDelayInput('12.6')).toBe(13);
+    expect(parseDelayInput('abc')).toBeNull();
+    expect(parseDelayInput('')).toBeNull();
+    expect(parseDelayInput('-5')).toBeNull();
+  });
+
+  it('clamps to whole seconds between 0 and 900', () => {
+    expect(clampDelay(-3)).toBe(0);
+    expect(clampDelay(5000)).toBe(900);
+    expect(clampDelay(Number.NaN)).toBe(0);
+  });
+
+  it('repairs a stored delay', () => {
+    expect(parsePreferences(JSON.stringify({ delaySeconds: 42 })).delaySeconds).toBe(42);
+    expect(parsePreferences(JSON.stringify({ delaySeconds: 99999 })).delaySeconds).toBe(900);
+    expect(parsePreferences(JSON.stringify({ delaySeconds: 'soon' })).delaySeconds).toBe(0);
   });
 });

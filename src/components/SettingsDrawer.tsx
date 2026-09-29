@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { Session } from '../data/model/types.ts';
 import { usePreferences } from '../hooks/usePreferences.ts';
+import { DelayStepper } from './DelayStepper.tsx';
 import { favoriteKey, toggleInList, TOGGLEABLE_COLUMNS, type Theme } from '../prefs/preferences.ts';
 
 interface Props {
@@ -41,6 +42,21 @@ export function SettingsDrawer({ session, onClose }: Props) {
             Close
           </button>
         </header>
+
+        <section className="drawer__section">
+          <h3>
+            <label htmlFor="tv-delay">TV delay (seconds)</label>
+          </h3>
+          <DelayStepper
+            id="tv-delay"
+            value={prefs.delaySeconds}
+            onChange={(delaySeconds) => update({ delaySeconds })}
+          />
+          <p className="drawer__hint">
+            Holds the board back so it lines up with a delayed broadcast. Type a number or use − /
+            +; Shift steps by 10.
+          </p>
+        </section>
 
         <section className="drawer__section">
           <h3>Display</h3>

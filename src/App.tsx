@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Board } from './components/Board.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { FeedStatusScreen } from './components/FeedStatusScreen.tsx';
@@ -7,7 +7,7 @@ import { FooterClock } from './components/FooterClock.tsx';
 import { EventTicker } from './components/EventTicker.tsx';
 import { SettingsDrawer } from './components/SettingsDrawer.tsx';
 import { useDisplayMode } from './hooks/useDisplayMode.ts';
-import { useLiveSession } from './hooks/useLiveSession.ts';
+import { setLiveDelaySeconds, useLiveSession } from './hooks/useLiveSession.ts';
 import { useApplyTheme, usePreferences } from './hooks/usePreferences.ts';
 
 export default function App() {
@@ -24,8 +24,11 @@ export default function App() {
     replay,
     error,
     retry,
+    delaySeconds,
+    holdingUntil,
   } = useLiveSession();
   const [prefs] = usePreferences();
+  useEffect(() => setLiveDelaySeconds(prefs.delaySeconds), [prefs.delaySeconds]);
   useApplyTheme();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -46,6 +49,7 @@ export default function App() {
               lastChanged={lastChanged}
               nextPollAt={nextPollAt}
               replayLabel={replay && `Replay · ${replay.speed}×`}
+              delaySeconds={delaySeconds}
               positionChanges={positionChanges}
               updateId={updateId}
               outLaps={outLaps}
@@ -56,7 +60,13 @@ export default function App() {
           {prefs.showTicker && <EventTicker events={events} />}
         </>
       ) : (
-        <FeedStatusScreen status={status} error={error} nextPollAt={nextPollAt} onRetry={retry} />
+        <FeedStatusScreen
+          status={status}
+          error={error}
+          nextPollAt={nextPollAt}
+          onRetry={retry}
+          holdingUntil={holdingUntil}
+        />
       )}
       <footer className="app__footer">
         <span className="app__disclaimer">
