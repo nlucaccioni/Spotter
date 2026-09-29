@@ -32,7 +32,6 @@ export interface ColumnDef {
 
 /** All columns, in display order. */
 export const COLUMNS: readonly ColumnDef[] = [
-  { id: 'pos', label: 'Pos', title: 'Position', priority: 1, widthEm: 2.2, align: 'right' },
   {
     id: 'change',
     label: '±',
@@ -41,6 +40,7 @@ export const COLUMNS: readonly ColumnDef[] = [
     widthEm: 2.8,
     align: 'right',
   },
+  { id: 'pos', label: 'Pos', title: 'Position', priority: 1, widthEm: 2.2, align: 'right' },
   { id: 'car', label: '#', title: 'Car number', priority: 1, widthEm: 2.6, align: 'right' },
   { id: 'driver', label: 'Driver', title: 'Driver', priority: 1, widthEm: 0, align: 'left' },
   { id: 'mfr', label: 'Mfr', title: 'Manufacturer', priority: 3, widthEm: 4.2, align: 'left' },
