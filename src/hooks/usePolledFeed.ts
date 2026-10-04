@@ -6,7 +6,7 @@ import {
   type Poller,
   type PollStatus,
 } from '../data/polling/poller.ts';
-import { createBrowserFetcher } from '../data/sources/browserFetcher.ts';
+import { createFeedFetcher } from '../data/sources/feedFetcher.ts';
 
 export interface PolledFeed<T> {
   data: T | null;
@@ -26,7 +26,7 @@ interface Options {
   delaySeconds: number;
 }
 
-const fetcher = createBrowserFetcher();
+const fetcher = createFeedFetcher();
 
 /**
  * Polls a JSON feed while the component is mounted, through the same polling engine as the live

@@ -3,13 +3,8 @@ import { createDelayBuffer, type Timed } from '../data/delayBuffer.ts';
 import { createLiveSessionPoller, LIVE_FEED_URL, type LiveSnapshot } from '../data/liveSession.ts';
 import { documentVisibility, type Poller, type PollerState } from '../data/polling/poller.ts';
 import { createSessionHistory, type HistoryUpdate } from '../data/sessionHistory.ts';
-import { createBrowserFetcher } from '../data/sources/browserFetcher.ts';
-import type { Fetcher } from '../data/sources/fetcher.ts';
-import {
-  readReplayOptions,
-  RECORDED_FRAME_SECONDS,
-  type ReplayOptions,
-} from '../dev/replayParams.ts';
+import { createFeedFetcher, replay } from '../data/sources/feedFetcher.ts';
+import { RECORDED_FRAME_SECONDS } from '../dev/replayParams.ts';
 
 // One poller per tab, shared by every component that uses the hook. It starts with the first
 // subscriber and stops when the last one unmounts. New snapshots pass through the TV-delay
@@ -28,13 +23,8 @@ interface StoreState {
   delaySeconds: number;
 }
 
-// Dev builds only: `?replay=<folder>` swaps the network fetcher for a recorded session.
-const replay: ReplayOptions | null = import.meta.env.DEV
-  ? readReplayOptions(window.location.search)
-  : null;
-
 function createStore() {
-  const fetcher = replay ? lazyReplayFetcher(replay) : createBrowserFetcher();
+  const fetcher = createFeedFetcher();
   const listeners = new Set<() => void>();
   let poller: Poller<LiveSnapshot> | null = null;
   let unsubscribePoller: (() => void) | null = null;
@@ -180,16 +170,6 @@ export function useLiveSession() {
     outLaps: history?.outLaps ?? NO_CARS,
     replay,
     retry: () => getStore().refresh(),
-  };
-}
-
-function lazyReplayFetcher(options: ReplayOptions): Fetcher {
-  let fetcher: Promise<Fetcher> | null = null;
-  return {
-    async fetchJson(url, opts) {
-      fetcher ??= import('../dev/replay.ts').then((m) => m.createReplayFetcher(options));
-      return (await fetcher).fetchJson(url, opts);
-    },
   };
 }
 

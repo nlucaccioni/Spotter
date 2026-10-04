@@ -3,7 +3,7 @@
 // itself can be loaded lazily and never ships in a production build.
 
 export interface ReplayOptions {
-  /** Replay folder name in the project root. */
+  /** Folder in recordings/ (`npm run record`) or a Timing71 download in the project root. */
   name: string;
   /** Playback speed; recordings have one frame per ~5 s, so 10 = one frame every 0.5 s. */
   speed: number;

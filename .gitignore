@@ -6,3 +6,6 @@ coverage
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
+
+# Live-feed recordings (npm run record): third-party data, never committed
+/recordings/
