@@ -69,6 +69,7 @@ export function parseLiveFeed(raw: unknown): ParseResult {
 
 function toCar(v: RawVehicle, ahead: RawVehicle | undefined, race: RaceBounds): CarState {
   const lapsLedRanges = v.laps_led.map(toLapRange);
+  const pitStops = toPitStops(v.pit_stops, race);
   return {
     position: v.running_position,
     carNumber: v.vehicle_number,
@@ -95,9 +96,10 @@ function toCar(v: RawVehicle, ahead: RawVehicle | undefined, race: RaceBounds): 
       0,
     ),
     lapsLedRanges,
-    pitStops: toPitStops(v.pit_stops, race),
+    pitStops,
     statusCode: v.status,
     isOnTrack: v.is_on_track,
+    isOnPitRoad: onPitRoad(v, pitStops.at(-1), race),
     isOnDvp: v.is_on_dvp,
     startingPosition: v.starting_position,
     positionsGained: v.starting_position === null ? null : v.starting_position - v.running_position,
@@ -114,6 +116,21 @@ function toCar(v: RawVehicle, ahead: RawVehicle | undefined, race: RaceBounds): 
       positionDifferentialLast10Percent: v.position_differential_last_10_percent,
     },
   };
+}
+
+// Allowance for a stop: a normal one takes well under a minute, penalties and repairs longer.
+// A car that's been off track for longer than this is assumed to be in the garage.
+const PIT_ROAD_MAX_SECONDS = 300;
+
+// The feed reports `is_on_track: false` while a car is on pit road, and fills in
+// `pit_out_elapsed_time` as soon as the car enters, updating it as the car moves down pit road
+// (confirmed live 2026-10-04; see docs/feed-notes.md). So "off track with a fresh stop" is the
+// on-pit-road signal. A stop with a pit-in time but no pit-out time also counts (replays).
+function onPitRoad(v: RawVehicle, stop: PitStop | undefined, race: RaceBounds): boolean {
+  if (v.status !== 1 || !stop || stop.inTime === null) return false;
+  if (stop.outTime === null) return true;
+  if (v.is_on_track) return false;
+  return race.elapsedSeconds <= 0 || race.elapsedSeconds - stop.inTime <= PIT_ROAD_MAX_SECONDS;
 }
 
 function toLapRange(r: RawLapRange): LapRange {

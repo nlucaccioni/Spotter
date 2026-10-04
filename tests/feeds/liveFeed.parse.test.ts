@@ -186,6 +186,53 @@ describe('parseLiveFeed — tolerance', () => {
   });
 });
 
+describe('parseLiveFeed — on pit road', () => {
+  // Mid-race: car #5 entered pit road at 4000 s; the live feed already has a pit-out time.
+  function at(elapsed: number, overrides: { is_on_track: boolean; status?: number; out?: number }) {
+    const feed = clone(kansas);
+    feed.elapsed_time = elapsed;
+    feed.laps_in_race = 267;
+    const v = feed.vehicles.find((x) => x.vehicle_number === '5')!;
+    v.pit_stops = v.pit_stops.filter((p) => p.pit_in_lap_count < 100);
+    v.pit_stops.push({
+      pit_in_lap_count: 100,
+      pit_in_leader_lap: 100,
+      pit_in_elapsed_time: 4000,
+      pit_out_elapsed_time: overrides.out ?? 4007,
+      pit_in_rank: 1,
+      pit_out_rank: 1,
+      positions_gained_lossed: 0,
+    });
+    v.is_on_track = overrides.is_on_track;
+    v.status = overrides.status ?? 1;
+    return car(parseOk(feed), '5');
+  }
+
+  it('is on pit road while off track with a fresh stop', () => {
+    expect(at(4030, { is_on_track: false }).isOnPitRoad).toBe(true);
+  });
+
+  it('is back on track once the feed says so', () => {
+    expect(at(4060, { is_on_track: true }).isOnPitRoad).toBe(false);
+  });
+
+  it('counts a stop with no pit-out time yet', () => {
+    expect(at(4030, { is_on_track: true, out: 0 }).isOnPitRoad).toBe(true);
+  });
+
+  it('treats a car off track long after its stop as not on pit road (garage)', () => {
+    expect(at(4400, { is_on_track: false }).isOnPitRoad).toBe(false);
+  });
+
+  it('never for a car out of the race', () => {
+    expect(at(4030, { is_on_track: false, status: 3 }).isOnPitRoad).toBe(false);
+  });
+
+  it('is false across the finished Kansas fixture', () => {
+    expect(parseOk(kansas).cars.filter((c) => c.isOnPitRoad)).toEqual([]);
+  });
+});
+
 describe('toPitStops', () => {
   const zero = {
     pit_in_lap_count: 0,

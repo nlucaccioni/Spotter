@@ -101,7 +101,10 @@ export interface CarState {
   pitStops: PitStop[];
   /** Raw `status`: 1 = running, 3 = out of race observed. See docs/feed-notes.md. */
   statusCode: number | null;
+  /** False on pit road as well as in the garage; see `isOnPitRoad`. */
   isOnTrack: boolean;
+  /** Running and in the middle of a pit stop. Derived; see `onPitRoad` in liveFeed.parse.ts. */
+  isOnPitRoad: boolean;
   isOnDvp: boolean;
   startingPosition: number | null;
   /** starting − current position; positive = gained. */

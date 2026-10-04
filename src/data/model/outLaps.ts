@@ -24,7 +24,7 @@ export function createOutLapTracker(): OutLapTracker {
 
       for (const car of next.cars) {
         const stop = car.pitStops.at(-1);
-        if (!stop || stop.outTime === null) {
+        if (!stop || car.isOnPitRoad) {
           exits.delete(car.carNumber);
           continue;
         }
@@ -51,8 +51,8 @@ export function createOutLapTracker(): OutLapTracker {
   };
 }
 
+// Only called once `car` is off pit road. The live feed sets a pit-out time as soon as a car
+// enters pit road, so `isOnPitRoad` (not the pit-out time) says whether it was still there.
 function leftPitRoad(old: CarState, car: CarState): boolean {
-  const previous = old.pitStops.at(-1);
-  if (car.pitStops.length > old.pitStops.length) return true;
-  return previous !== undefined && previous.outTime === null;
+  return old.isOnPitRoad || car.pitStops.length > old.pitStops.length;
 }

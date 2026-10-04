@@ -1,4 +1,4 @@
-import type { Badge, CarState, DriverName, PitStop } from '../../data/model/types.ts';
+import type { Badge, CarState, DriverName } from '../../data/model/types.ts';
 import type { NameFormat } from './layout.ts';
 
 export function formatLapTime(seconds: number | undefined): string {
@@ -36,6 +36,7 @@ export function formatManufacturer(name: string): string {
 /** Short monospace status label, with the full meaning for a tooltip. */
 export function formatStatus(car: CarState): { label: string; title: string } {
   if (car.statusCode === 1) {
+    if (car.isOnPitRoad) return { label: 'PIT', title: 'On pit road' };
     return car.isOnTrack
       ? { label: 'RUN', title: 'Running' }
       : { label: 'OFF', title: 'Not on track' };
@@ -46,7 +47,7 @@ export function formatStatus(car: CarState): { label: string; title: string } {
 }
 
 export function isOut(car: CarState): boolean {
-  return !car.isOnTrack || car.statusCode === 3;
+  return (!car.isOnTrack && !car.isOnPitRoad) || car.statusCode === 3;
 }
 
 /** 'pit' = on pit road now; 'out' = on the out lap (see data/model/outLaps.ts). */
@@ -64,9 +65,7 @@ export function pitIndicator(
   onOutLap: boolean,
 ): PitIndicator {
   if (sessionFinished || isOut(car)) return null;
-  const last: PitStop | undefined = car.pitStops.at(-1);
-  if (!last) return null;
-  if (last.inTime !== null && last.outTime === null) return 'pit';
+  if (car.isOnPitRoad) return 'pit';
   return onOutLap ? 'out' : null;
 }
 

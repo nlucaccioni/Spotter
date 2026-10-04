@@ -83,10 +83,19 @@ Fixture: `tests/fixtures/cup-2026-kansas-final.json` (race_id 5628, 267/267 laps
     10361 s). 4 more (#1, #22, #34, #77) have one on leader lap 267 with no times at all; #77's
     own lap count was 264, so these follow the leader's lap. The parser drops any stop on or
     after the leader's final lap, or with a pit-in time after the session's elapsed time.
-  - Still to confirm during a live race: what an in-progress stop looks like (expected: a pit-in
-    time and a zero pit-out time).
-  - Also to confirm live: whether `is_on_track` goes false while a car is on pit road. The board
-    dims rows with `is_on_track: false`, so if it does, rows would dim during stops.
+  - In-progress stops: see the 2026-10-04 entry below (not a zero pit-out time, as expected).
+
+### 2026-10-04 — Cars on pit road (live, Cup lap 82–84 caution stops)
+
+- `is_on_track` is **false** while a car is on pit road (`status` stays 1).
+- An in-progress stop already has a **non-zero** `pit_out_elapsed_time`: it appears within
+  seconds of pit-in and keeps advancing while the car is on pit road (e.g. #21: pit-in 3137.6,
+  pit-out 3144.7 at elapsed 3149, then 3175.8 at elapsed 3179, still off track). It can also sit
+  unchanged for 30–60 s while the car is stopped. So pit-out time can't say whether a stop is
+  over; `is_on_track` flipping back to true does.
+- The parser derives `isOnPitRoad`: running, off track, and the last stop's pit-in within 300 s
+  of the session clock (longer than that, assume the garage and show OFF). A stop with a pit-in
+  time and no pit-out time also counts, which is how the Timing71 replays show it.
 
 ### 2026-09-28 — Lap count at pit exit (from the Kansas Timing71 replay)
 

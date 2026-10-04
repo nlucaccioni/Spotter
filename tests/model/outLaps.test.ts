@@ -6,12 +6,17 @@ import kansas from '../fixtures/cup-2026-kansas-final.json';
 
 type RawFeed = typeof kansas;
 
-/** Mid-race snapshot where car #5 has `laps` completed and a stop on lap 100 in some state. */
-function snapshot(laps: number, stop: 'none' | 'in' | 'out'): Session {
+/**
+ * Mid-race snapshot where car #5 has `laps` completed and a stop on lap 100 in some state.
+ * 'in' is how replays show a car on pit road (no pit-out time yet); 'pit-road' is how the live
+ * feed does (off track, pit-out time already set and still moving).
+ */
+function snapshot(laps: number, stop: 'none' | 'in' | 'pit-road' | 'out'): Session {
   const feed: RawFeed = structuredClone(kansas);
   feed.flag_state = 1;
   feed.lap_number = 150;
   feed.laps_in_race = 267;
+  feed.elapsed_time = 4100;
   const car = feed.vehicles.find((v) => v.vehicle_number === '5')!;
   car.laps_completed = laps;
   car.pit_stops = car.pit_stops.filter((p) => p.pit_in_lap_count < 100);
@@ -20,12 +25,13 @@ function snapshot(laps: number, stop: 'none' | 'in' | 'out'): Session {
       pit_in_lap_count: 100,
       pit_in_leader_lap: 100,
       pit_in_elapsed_time: 4000,
-      pit_out_elapsed_time: stop === 'out' ? 4036 : 0,
+      pit_out_elapsed_time: { none: 0, in: 0, 'pit-road': 4020, out: 4036 }[stop],
       pit_in_rank: 1,
       pit_out_rank: stop === 'out' ? 5 : 0,
       positions_gained_lossed: stop === 'out' ? -4 : 0,
     });
   }
+  car.is_on_track = stop !== 'pit-road';
   const result = parseLiveFeed(feed);
   if (!result.ok) throw new Error(result.error);
   return result.session;
@@ -69,6 +75,18 @@ describe('createOutLapTracker', () => {
       true,
       false,
     ]);
+  });
+
+  it('live feed: waits until the car is back on track, even though pit-out is already set', () => {
+    expect(
+      play(
+        snapshot(100, 'none'),
+        snapshot(100, 'pit-road'),
+        snapshot(101, 'pit-road'), // crossed the timing line on pit road
+        snapshot(101, 'out'),
+        snapshot(102, 'out'),
+      ),
+    ).toEqual([false, false, false, true, false]);
   });
 
   it("doesn't guess for stops that finished before it started watching", () => {

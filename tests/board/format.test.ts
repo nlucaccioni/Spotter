@@ -31,6 +31,8 @@ const withStops = (lapsCompleted: number, pitStops: PitStop[]): CarState => ({
   pitStops,
 });
 
+const onPitRoad = (car: CarState): CarState => ({ ...car, isOnTrack: false, isOnPitRoad: true });
+
 describe('format helpers', () => {
   it('formats lap times and position changes', () => {
     expect(formatLapTime(30.076)).toBe('30.076');
@@ -50,6 +52,10 @@ describe('format helpers', () => {
   it('describes status and marks cars out of the race', () => {
     expect(formatStatus(larson)).toEqual({ label: 'RUN', title: 'Running' });
     expect(formatStatus({ ...larson, isOnTrack: false }).label).toBe('OFF');
+    const pitting = { ...larson, isOnTrack: false, isOnPitRoad: true };
+    expect(formatStatus(pitting)).toEqual({ label: 'PIT', title: 'On pit road' });
+    expect(isOut(pitting)).toBe(false);
+    expect(isOut({ ...larson, isOnTrack: false })).toBe(true);
     expect(formatStatus({ ...larson, statusCode: 7 })).toEqual({
       label: 'S7',
       title: 'Unknown status code 7',
@@ -63,7 +69,9 @@ describe('format helpers', () => {
 
 describe('pitIndicator', () => {
   it('shows PIT on pit road, OUT on the out lap, then nothing', () => {
-    expect(pitIndicator(withStops(50, [stop(50, 2000, null)]), false, false)).toBe('pit');
+    expect(pitIndicator(onPitRoad(withStops(50, [stop(50, 2000, 2010)])), false, false)).toBe(
+      'pit',
+    );
     expect(pitIndicator(withStops(51, [stop(50, 2000, 2035)]), false, true)).toBe('out');
     expect(pitIndicator(withStops(52, [stop(50, 2000, 2035)]), false, false)).toBeNull();
     expect(pitIndicator(withStops(52, []), false, false)).toBeNull();
@@ -75,7 +83,7 @@ describe('pitIndicator', () => {
   });
 
   it('shows nothing once the session is finished', () => {
-    expect(pitIndicator(withStops(50, [stop(50, 2000, null)]), true, false)).toBeNull();
+    expect(pitIndicator(onPitRoad(withStops(50, [stop(50, 2000, null)])), true, false)).toBeNull();
     expect(pitIndicator(withStops(51, [stop(50, 2000, 2035)]), true, true)).toBeNull();
   });
 });
