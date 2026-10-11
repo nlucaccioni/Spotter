@@ -42,6 +42,9 @@ export function formatStatus(car: CarState): { label: string; title: string } {
       : { label: 'OFF', title: 'Not on track' };
   }
   if (car.statusCode === 3) return { label: 'OUT', title: 'Out of the race' };
+  // Believed, from one car (docs/feed-notes.md, 2026-10-11).
+  if (car.statusCode === 6)
+    return { label: 'GAR', title: 'Damaged, behind the wall (unconfirmed)' };
   if (car.statusCode === null) return { label: '—', title: 'No status' };
   return { label: `S${car.statusCode}`, title: `Unknown status code ${car.statusCode}` };
 }

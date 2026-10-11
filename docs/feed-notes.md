@@ -18,10 +18,11 @@ See `PROJECT_BRIEF.md` §3 for the baseline. Add a dated entry whenever somethin
 
 ## `vehicles[].status`
 
-| Value | Meaning     | Confirmed                       |
-| ----- | ----------- | ------------------------------- |
-| 1     | Running     | Observed                        |
-| 3     | Out of race | Observed (`is_on_track: false`) |
+| Value | Meaning                                | Confirmed                                                        |
+| ----- | -------------------------------------- | ---------------------------------------------------------------- |
+| 1     | Running                                | Observed                                                         |
+| 3     | Out of race                            | Observed (`is_on_track: false`)                                  |
+| 6     | Damaged, behind the wall (not retired) | Believed (one car, 6 → 3 when retired, 2026-10-11); shown as GAR |
 
 ## `series_id`
 
@@ -189,3 +190,15 @@ Note, NoteID, DriverIDs }] } }`. Written commentary, current to the
   (`Last-Modified` ~3 min behind).
 - **`live/feeds/live-pit-data.json`**: one row per stop, with lap, flag status at pit in/out,
   pit road and box times, `pit_stop_type` and which tyres were changed. No caution information.
+
+### 2026-10-11 — `status` 6 (live, Cup Charlotte 5629, lap ~96)
+
+- #48 (Bowman) had `status: 6` after the lap-76 crash with #23 and #24 ("#23, 48, 24 incident
+  turn 2" in the flag feed). All three cars showed `is_on_track: false`, `is_on_dvp: true` and
+  `laps_completed` stuck at 76, but #23 and #24 were `status: 3`. So 6 is believed to mean
+  damaged and behind the wall, not yet retired. The board shows it as GAR.
+- By lap 102 #48 had changed to `status: 3` with nothing else different, so 6 → 3 when the team
+  retires the car. **To confirm:** that a status-6 car goes back to 1 if it returns to the track.
+- **Per-series feed timestamp:** at the same time, `series_1/5629/live_feed.json` sent
+  `time_of_day_os: "0001-01-01T00:00:00+00:00"` on every request, while `live-feed.json` (same
+  race and lap) had the real time. The parser treats anything before 2000 as missing.

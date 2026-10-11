@@ -60,6 +60,10 @@ describe('format helpers', () => {
       label: 'S7',
       title: 'Unknown status code 7',
     });
+    expect(formatStatus({ ...larson, statusCode: 6, isOnTrack: false })).toEqual({
+      label: 'GAR',
+      title: 'Damaged, behind the wall (unconfirmed)',
+    });
     const out = result.session.cars.find((c) => c.carNumber === '4')!;
     expect(formatStatus(out).label).toBe('OUT');
     expect(isOut(out)).toBe(true);
