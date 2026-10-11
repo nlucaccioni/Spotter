@@ -175,7 +175,7 @@ Looked for feeds that say why a caution came out. All of these are CORS `*` (GET
   `"Stage 1 Conclusion"`, `"Competition caution"`, `"#54, 6 incident turn 4"`. `beneficiary` is
   the free-pass car number padded with spaces (`"21   "`), or `""` / `null`. It updated live, with
   the same `Last-Modified` as the timing feed. Also seen: `flag_state` **8** on the lap-0 entry
-  (before the race starts; meaning not confirmed).
+  (warm-up, see `flag_state` above), which the event log shows as a Warm-up row.
 - **`cacher/{year}/{series}/{race_id}/lap-notes.json`**: `{ laps: { "<lap>": [{ FlagState,
 Note, NoteID, DriverIDs }] } }`. Written commentary, current to the
   live lap. Caution notes start with `"Caution: "` and give more detail than the flag feed, e.g.

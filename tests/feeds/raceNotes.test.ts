@@ -106,6 +106,7 @@ describe('race notes feeds', () => {
         [48, 'green'],
         [43, 'yellow'],
         [0, 'green'],
+        [0, 'warmup'],
       ]);
     });
 
@@ -117,6 +118,7 @@ describe('race notes feeds', () => {
         [48, 'green'],
         [43, 'yellow'],
         [0, 'green'],
+        [0, 'warmup'],
       ]);
       expect(earlier.every((e) => e.id < 0)).toBe(true);
     });
