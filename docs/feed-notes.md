@@ -162,3 +162,30 @@ each car's lap count when it's seen leaving pit road and shows OUT until that co
   latest. The schedule is used instead.
 - **To confirm live:** that a series feed switches to practice/qualifying when the weekend's
   first session starts (the board assumes it does), and how it looks between practice and the race.
+
+### 2026-10-11 — Caution reasons and lap notes (live, Cup Charlotte 5629, lap ~48)
+
+Looked for feeds that say why a caution came out. All of these are CORS `*` (GET/HEAD).
+
+- **`live/feeds/live-flag-data.json`** (featured race) and
+  **`live/feeds/series_{series}/{race_id}/live-flag-data.json`** (hyphens; the underscore form
+  403s, unlike `live_feed.json`). An array with one entry per flag change: `lap_number`,
+  `flag_state`, `elapsed_time`, `time_of_day_os`, `comment` and `beneficiary`. Only cautions
+  (`flag_state` 2) have a `comment`, e.g. `"#38 Spin Turn 4"`, `"Debris Pit Entry"`,
+  `"Stage 1 Conclusion"`, `"Competition caution"`, `"#54, 6 incident turn 4"`. `beneficiary` is
+  the free-pass car number padded with spaces (`"21   "`), or `""` / `null`. It updated live, with
+  the same `Last-Modified` as the timing feed. Also seen: `flag_state` **8** on the lap-0 entry
+  (before the race starts; meaning not confirmed).
+- **`cacher/{year}/{series}/{race_id}/lap-notes.json`**: `{ laps: { "<lap>": [{ FlagState,
+Note, NoteID, DriverIDs }] } }`. Written commentary, current to the
+  live lap. Caution notes start with `"Caution: "` and give more detail than the flag feed, e.g.
+  `"Caution: #38 spins in turn 4 from 28 with a flat right rear tire."`. They also cover
+  restarts, who pitted, lead battles and penalties ("To the rear: #4 (unapproved adjustments)").
+  Lap 0 holds pre-race notes. `cacher/live/series_1/{race_id}/lap-notes.json` 403s.
+- **`weekend-feed.json` `caution_segments`**: `start_lap`, `end_lap`, `reason` (`Spin`,
+  `Competition`, `Debris`, …), `comment` (same text as the flag feed) and
+  `beneficiary_car_number`. Its laps are about 2 later than the flag feed's (5630: 45 vs 43,
+  82 vs 80). Also has `infractions` (empty for 5630). Updates during the race, but less often
+  (`Last-Modified` ~3 min behind).
+- **`live/feeds/live-pit-data.json`**: one row per stop, with lap, flag status at pit in/out,
+  pit road and box times, `pit_stop_type` and which tyres were changed. No caution information.

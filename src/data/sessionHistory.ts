@@ -28,7 +28,7 @@ export interface SessionHistory {
   snapshots(): readonly Session[];
 }
 
-export function createSessionHistory(maxSnapshots = 20, maxEvents = 50): SessionHistory {
+export function createSessionHistory(maxSnapshots = 20, maxEvents = 2000): SessionHistory {
   let snapshots: Session[] = [];
   let events: TimedEvent[] = [];
   let nextEventId = 1;

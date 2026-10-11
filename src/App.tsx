@@ -4,6 +4,7 @@ import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { FeedStatusScreen } from './components/FeedStatusScreen.tsx';
 import { Controls } from './components/Controls.tsx';
 import { FooterClock } from './components/FooterClock.tsx';
+import { EventLog } from './components/EventLog.tsx';
 import { EventTicker } from './components/EventTicker.tsx';
 import { PointsPage } from './components/points/PointsPage.tsx';
 import { SettingsDrawer } from './components/SettingsDrawer.tsx';
@@ -39,10 +40,12 @@ export default function App() {
   const [route, navigate] = useHashRoute();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
+  const [eventLogOpen, setEventLogOpen] = useState(false);
+  const closeEventLog = useCallback(() => setEventLogOpen(false), []);
 
   // Keep the screen awake only while a session is actually running.
   const display = useDisplayMode(status === 'live' && session?.flag.kind !== 'checkered');
-  const idle = display.idle && !settingsOpen;
+  const idle = display.idle && !settingsOpen && !eventLogOpen;
 
   return (
     <div className={`app${idle ? ' app--idle' : ''}`}>
@@ -70,7 +73,9 @@ export default function App() {
               onRetry={retry}
             />
           </ErrorBoundary>
-          {prefs.showTicker && <EventTicker events={events} />}
+          {prefs.showTicker && (
+            <EventTicker events={events} onOpenLog={() => setEventLogOpen(true)} />
+          )}
         </>
       ) : (
         <FeedStatusScreen
@@ -98,6 +103,14 @@ export default function App() {
           onSeriesChange={replay ? null : (liveSeries) => updatePrefs({ liveSeries })}
         />
       </footer>
+      {eventLogOpen && (
+        <EventLog
+          events={events}
+          session={session}
+          delaySeconds={delaySeconds}
+          onClose={closeEventLog}
+        />
+      )}
       {settingsOpen && <SettingsDrawer session={session} onClose={closeSettings} />}
     </div>
   );

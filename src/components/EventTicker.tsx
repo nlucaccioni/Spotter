@@ -3,24 +3,31 @@ import type { TimedEvent } from '../data/sessionHistory.ts';
 
 interface Props {
   events: TimedEvent[];
+  onOpenLog: () => void;
 }
 
-/** Compact strip of recent race events, newest first. */
-export function EventTicker({ events }: Props) {
+/** Compact strip of recent race events, newest first. Opens the full log when clicked. */
+export function EventTicker({ events, onOpenLog }: Props) {
   return (
-    <div className="ticker" aria-label="Recent events">
-      {events.length === 0 ? (
-        <span className="muted">No events yet</span>
-      ) : (
-        <ol className="ticker__list">
-          {events.slice(0, 12).map(({ id, event }) => (
-            <li key={id} className={`ticker__item ticker__item--${event.kind}`}>
+    <button
+      type="button"
+      className="ticker"
+      aria-label={`Recent events. Show all ${events.length} events`}
+      onClick={onOpenLog}
+    >
+      <span className="ticker__list">
+        {events.length === 0 ? (
+          <span className="muted">No events yet</span>
+        ) : (
+          events.slice(0, 12).map(({ id, event }) => (
+            <span key={id} className={`ticker__item ticker__item--${event.kind}`}>
               <span className="ticker__lap">L{event.lap}</span>
               {describeEvent(event)}
-            </li>
-          ))}
-        </ol>
-      )}
-    </div>
+            </span>
+          ))
+        )}
+      </span>
+      <span className="ticker__more">All events ›</span>
+    </button>
   );
 }

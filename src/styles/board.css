@@ -355,19 +355,43 @@
 /* ---- Event ticker ---- */
 
 .ticker {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  width: 100%;
   padding: 4px 12px;
+  border: 0;
   border-top: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
   font-size: clamp(0.8rem, 1.1vh, 1.1rem);
+  text-align: left;
   white-space: nowrap;
+  cursor: pointer;
+}
+
+.ticker:hover .ticker__more,
+.ticker:focus-visible .ticker__more {
+  color: var(--text);
+}
+
+.ticker:focus-visible {
+  outline: 2px solid var(--badge-pit);
+  outline-offset: -2px;
+}
+
+.ticker__list {
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.ticker__list {
-  display: inline;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.ticker__more {
+  flex: none;
+  color: var(--text-muted);
+  font-size: 0.9em;
 }
 
 .ticker__item {
@@ -398,6 +422,61 @@
 .ticker__item--lead-change,
 .ticker__item--fastest-lap {
   color: var(--session-best);
+}
+
+/* ---- Event log ---- */
+
+.event-log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.event-log .segmented-control {
+  flex: none;
+  align-self: flex-start;
+}
+
+.event-log__empty {
+  margin: 8px 0;
+}
+
+.event-log__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.event-log__item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 0;
+  border-top: 1px solid var(--border);
+}
+
+.event-log__item .ticker__lap {
+  flex: none;
+  min-width: 3.2em;
+  margin-right: 0;
+}
+
+.event-log__text {
+  flex: 1;
+}
+
+.event-log__detail {
+  display: block;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.event-log__time {
+  flex: none;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
 }
 
 /* ---- Dev replay badge ---- */
