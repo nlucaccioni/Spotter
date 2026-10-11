@@ -7,6 +7,7 @@ describe('flagFromCode', () => {
     [2, 'yellow', 'Caution'],
     [3, 'red', 'Red flag'],
     [4, 'white', 'White flag'],
+    [8, 'warmup', 'Warm-up'],
     [9, 'checkered', 'Checkered'],
   ])('maps %i to %s', (code, kind, label) => {
     expect(flagFromCode(code)).toEqual({ code, kind, label });

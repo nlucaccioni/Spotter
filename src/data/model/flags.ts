@@ -1,12 +1,14 @@
 import type { Flag, FlagKind } from './types.ts';
 
-// `flag_state` codes. 1 and 9 are confirmed; 2, 3, 4 are believed (see docs/feed-notes.md).
+// `flag_state` codes. 1, 8 and 9 are confirmed; 2, 3, 4 are believed (see docs/feed-notes.md).
+// 8 is unofficial: timing has started for warm-up laps but the event itself hasn't.
 // Colours live in CSS as --flag-<kind>, so this module only maps code -> kind + label.
 const KNOWN_FLAGS: Record<number, { kind: FlagKind; label: string }> = {
   1: { kind: 'green', label: 'Green' },
   2: { kind: 'yellow', label: 'Caution' },
   3: { kind: 'red', label: 'Red flag' },
   4: { kind: 'white', label: 'White flag' },
+  8: { kind: 'warmup', label: 'Warm-up' },
   9: { kind: 'checkered', label: 'Checkered' },
 };
 

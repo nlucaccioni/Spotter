@@ -13,7 +13,7 @@ export interface DriverName {
   badges: Badge[];
 }
 
-export type FlagKind = 'green' | 'yellow' | 'red' | 'white' | 'checkered' | 'unknown';
+export type FlagKind = 'green' | 'yellow' | 'red' | 'white' | 'checkered' | 'warmup' | 'unknown';
 
 export interface Flag {
   /** Raw `flag_state`, or null if the feed didn't provide one. */
