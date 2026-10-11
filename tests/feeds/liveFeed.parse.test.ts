@@ -157,6 +157,9 @@ describe('parseLiveFeed — tolerance', () => {
     expect(session.stage).toBeNull();
     expect(session.updatedAtMs).toBeNull();
     expect(session.lap).toBe(0);
+    expect(
+      parseOk({ ...clone(kansas), time_of_day_os: '0001-01-01T00:00:00+00:00' }).updatedAtMs,
+    ).toBeNull();
 
     const first = session.cars[0]!;
     expect(first.carNumber).toBe('5');

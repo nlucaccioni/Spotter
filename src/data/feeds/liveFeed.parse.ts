@@ -182,10 +182,13 @@ function fastestLap(cars: CarState[]): FastestLap | null {
   return best;
 }
 
+// The per-series feeds send a placeholder "0001-01-01T00:00:00+00:00" (docs/feed-notes.md).
+const EARLIEST_TIMESTAMP = Date.UTC(2000, 0, 1);
+
 function parseTimestamp(value: string | null): number | null {
   if (!value) return null;
   const ms = Date.parse(value);
-  return Number.isNaN(ms) ? null : ms;
+  return Number.isNaN(ms) || ms < EARLIEST_TIMESTAMP ? null : ms;
 }
 
 // The feed uses 0 for "no value" in times and speeds.

@@ -67,7 +67,8 @@ export function EventLog({ events, session, delaySeconds, onClose }: Props) {
 
   const seriesId = session?.series.id ?? null;
   const raceId = session?.raceId ?? null;
-  const updatedAt = session?.updatedAtMs ?? null;
+  const [currentYear] = useState(() => new Date().getFullYear());
+  const year = session?.updatedAtMs ? new Date(session.updatedAtMs).getFullYear() : currentYear;
   const lap = session?.lap ?? 0;
   const known = seriesId !== null && raceId !== null;
 
@@ -76,9 +77,7 @@ export function EventLog({ events, session, delaySeconds, onClose }: Props) {
     delaySeconds,
   });
   const lapNotes = usePolledFeed(
-    known && updatedAt !== null && filter === 'notes'
-      ? lapNotesUrl(new Date(updatedAt).getFullYear(), seriesId, raceId)
-      : null,
+    known && filter === 'notes' ? lapNotesUrl(year, seriesId, raceId) : null,
     parseLapNotes,
     { ...POLL, delaySeconds },
   );
