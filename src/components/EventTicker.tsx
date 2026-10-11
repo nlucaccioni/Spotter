@@ -1,5 +1,6 @@
 import { describeEvent } from '../data/model/diff.ts';
 import type { TimedEvent } from '../data/sessionHistory.ts';
+import { eventClass } from './eventClass.ts';
 
 interface Props {
   events: TimedEvent[];
@@ -20,7 +21,7 @@ export function EventTicker({ events, onOpenLog }: Props) {
           <span className="muted">No events yet</span>
         ) : (
           events.slice(0, 12).map(({ id, event }) => (
-            <span key={id} className={`ticker__item ticker__item--${event.kind}`}>
+            <span key={id} className={`ticker__item ${eventClass(event)}`}>
               <span className="ticker__lap">L{event.lap}</span>
               {describeEvent(event)}
             </span>

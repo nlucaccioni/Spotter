@@ -415,8 +415,17 @@
   font-size: 0.9em;
 }
 
-.ticker__item--flag {
+/* Same colours as positions gained / lost and the contender badge: no extra palette. */
+.ticker__item--flag-green {
+  color: var(--up);
+}
+
+.ticker__item--flag-yellow {
   color: var(--badge-contender);
+}
+
+.ticker__item--flag-red {
+  color: var(--down);
 }
 
 .ticker__item--lead-change,
@@ -430,6 +439,8 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* A third of the screen, but never narrower than the settings drawer (or wider than the screen). */
+  width: min(max(420px, 100vw / 3), 100%);
 }
 
 .event-log .segmented-control {

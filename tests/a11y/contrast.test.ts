@@ -90,6 +90,10 @@ const PAIRS: [string, string, string, number][] = [
   ['stale warning', '--stale-text', '--stale-bg', TEXT],
   ['text on gain flash', '--text', '--flash-up', TEXT],
   ['text on loss flash', '--text', '--flash-down', TEXT],
+  // Event ticker and log flag colours, on the event log panel.
+  ['green flag event on panels', '--up', '--surface', TEXT],
+  ['caution event on panels', '--badge-contender', '--surface', TEXT],
+  ['red flag event on panels', '--down', '--surface', TEXT],
   ['favorite accent bar', '--favorite', '--bg', UI],
   ['borders vs background (UI)', '--text-muted', '--bg', UI],
 ];

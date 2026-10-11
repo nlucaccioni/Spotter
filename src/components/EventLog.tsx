@@ -8,10 +8,11 @@ import {
   parseLapNotes,
   type FlagChange,
 } from '../data/feeds/raceNotes.ts';
-import { describeEvent, type RaceEvent } from '../data/model/diff.ts';
+import { describeEvent, pitRoadChange, type RaceEvent } from '../data/model/diff.ts';
 import type { Session } from '../data/model/types.ts';
 import type { TimedEvent } from '../data/sessionHistory.ts';
 import { usePolledFeed } from '../hooks/usePolledFeed.ts';
+import { eventClass } from './eventClass.ts';
 
 interface Props {
   events: TimedEvent[];
@@ -150,7 +151,7 @@ export function EventLog({ events, session, delaySeconds, onClose }: Props) {
               {notes.map((note) => (
                 <li
                   key={note.id}
-                  className={`event-log__item${note.flagCode === YELLOW ? ' ticker__item--flag' : ''}`}
+                  className={`event-log__item${note.flagCode === YELLOW ? ' ticker__item--flag-yellow' : ''}`}
                 >
                   <span className="ticker__lap">L{note.lap}</span>
                   <span className="event-log__text">{note.text}</span>
@@ -163,11 +164,11 @@ export function EventLog({ events, session, delaySeconds, onClose }: Props) {
         ) : (
           <ol className="event-log__list">
             {shown.map(({ id, at, event }) => (
-              <li key={id} className={`event-log__item ticker__item--${event.kind}`}>
+              <li key={id} className={`event-log__item ${eventClass(event)}`}>
                 <span className="ticker__lap">L{event.lap}</span>
                 <span className="event-log__text">
                   {describeEvent(event)}
-                  <CautionDetail event={event} flagChanges={flagChanges} />
+                  <EventDetail event={event} flagChanges={flagChanges} />
                 </span>
                 {at > 0 && (
                   <time className="event-log__time" dateTime={new Date(at).toISOString()}>
@@ -183,10 +184,15 @@ export function EventLog({ events, session, delaySeconds, onClose }: Props) {
   );
 }
 
-function CautionDetail({ event, flagChanges }: { event: RaceEvent; flagChanges: FlagChange[] }) {
-  if (event.kind !== 'flag' || event.flag.kind !== 'yellow') return null;
+/** A muted second line: why a caution came out, or what a pit stop did to the car's position. */
+function EventDetail({ event, flagChanges }: { event: RaceEvent; flagChanges: FlagChange[] }) {
+  const text = event.kind === 'flag' ? cautionText(event, flagChanges) : pitRoadChange(event);
+  return text ? <span className="event-log__detail">{text}</span> : null;
+}
+
+function cautionText(event: RaceEvent & { kind: 'flag' }, flagChanges: FlagChange[]): string {
+  if (event.flag.kind !== 'yellow') return '';
   const caution = cautionNear(flagChanges, event.lap);
   const parts = [caution?.reason, caution?.freePass && `Free pass #${caution.freePass}`];
-  const text = parts.filter(Boolean).join(' · ');
-  return text ? <span className="event-log__detail">{text}</span> : null;
+  return parts.filter(Boolean).join(' · ');
 }
