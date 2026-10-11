@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { parseLiveFeed } from '../../src/data/feeds/liveFeed.parse.ts';
-import { describeEvent, diffSessions, type RaceEvent } from '../../src/data/model/diff.ts';
+import {
+  describeEvent,
+  diffSessions,
+  pitRoadChange,
+  type RaceEvent,
+} from '../../src/data/model/diff.ts';
 import type { Session } from '../../src/data/model/types.ts';
 import kansas from '../fixtures/cup-2026-kansas-final.json';
 
@@ -104,12 +109,63 @@ describe('diffSessions', () => {
     const pitOut = diffSessions(session(inPit), session(out)).events;
     expect(kinds(pitOut)).toEqual(['pit-out']);
     expect(describeEvent(pitOut[0]!)).toBe('#5 K. Larson leaves the pits in P12');
+    expect(pitRoadChange(pitOut[0]!)).toBe('Lost 11 spots on pit road');
+    expect(pitRoadChange(pitIn[0]!)).toBeNull();
 
     // Both within one polling interval.
     expect(kinds(diffSessions(session(midRace), session(out)).events)).toEqual([
       'pit-in',
       'pit-out',
     ]);
+  });
+
+  it('words the positions gained or lost on pit road', () => {
+    const change = (positionChange: number | null) =>
+      pitRoadChange({
+        kind: 'pit-out',
+        lap: 1,
+        car: { carNumber: '5', name: 'K. Larson' },
+        position: 3,
+        positionChange,
+      });
+    expect(change(3)).toBe('Gained 3 spots on pit road');
+    expect(change(-1)).toBe('Lost 1 spot on pit road');
+    expect(change(0)).toBe('No change on pit road');
+    expect(change(null)).toBeNull();
+  });
+
+  it('waits for a car to leave pit road before reporting it out of the pits', () => {
+    // As the live feed does it: the pit-out time is filled in as soon as the car enters.
+    // The fixture's clock is at 10361 s, so this stop is about a minute old.
+    const entering = (f: RawFeed) => {
+      midRace(f);
+      const car = vehicle(f, '5');
+      car.is_on_track = false;
+      car.pit_stops.push({
+        pit_in_lap_count: 199,
+        pit_in_leader_lap: 199,
+        pit_in_elapsed_time: 10300,
+        pit_out_elapsed_time: 10310,
+        pit_in_rank: 1,
+        pit_out_rank: 1,
+        positions_gained_lossed: 0,
+      });
+    };
+    const stillIn = (f: RawFeed) => {
+      entering(f);
+      vehicle(f, '5').pit_stops.at(-1)!.pit_out_elapsed_time = 10325;
+    };
+    const backOut = (f: RawFeed) => {
+      stillIn(f);
+      const car = vehicle(f, '5');
+      car.is_on_track = true;
+      Object.assign(car.pit_stops.at(-1)!, { pit_out_elapsed_time: 10336, pit_out_rank: 12 });
+    };
+
+    expect(kinds(diffSessions(session(midRace), session(entering)).events)).toEqual(['pit-in']);
+    expect(kinds(diffSessions(session(entering), session(stillIn)).events)).toEqual([]);
+    const out = diffSessions(session(stillIn), session(backOut)).events;
+    expect(out.map(describeEvent)).toEqual(['#5 K. Larson leaves the pits in P12']);
   });
 
   it('reports cars going out of the race and onto the DVP clock', () => {

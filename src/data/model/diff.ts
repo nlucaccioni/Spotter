@@ -12,7 +12,14 @@ export type RaceEvent =
   | { kind: 'flag'; lap: number; flag: Flag }
   | { kind: 'lead-change'; lap: number; car: CarRef }
   | { kind: 'pit-in'; lap: number; car: CarRef; fromPosition: number }
-  | { kind: 'pit-out'; lap: number; car: CarRef; position: number | null }
+  | {
+      kind: 'pit-out';
+      lap: number;
+      car: CarRef;
+      position: number | null;
+      /** Positions gained (+) or lost on pit road, from the feed. */
+      positionChange: number | null;
+    }
   | { kind: 'out'; lap: number; car: CarRef }
   | { kind: 'dvp'; lap: number; car: CarRef }
   | { kind: 'fastest-lap'; lap: number; car: CarRef; seconds: number };
@@ -84,9 +91,19 @@ function pitEvents(old: CarState, car: CarState, lap: number): RaceEvent[] {
       fromPosition: last.inRank ?? old.position,
     });
   }
-  const leftPits = last.outTime !== null && (isNewStop || previous?.outTime === null);
+  // The live feed fills in the pit-out time as soon as a car enters pit road, so it can't say
+  // when the car left. Leaving is pit road -> back on track (see isOnPitRoad); a whole stop
+  // between two polls shows up as a new, finished stop on a car that's already back out.
+  const backOnTrack = car.isOnTrack && !car.isOnPitRoad && last.outTime !== null;
+  const leftPits = backOnTrack && (old.isOnPitRoad || isNewStop);
   if (leftPits) {
-    events.push({ kind: 'pit-out', lap, car: ref(car), position: last.outRank });
+    events.push({
+      kind: 'pit-out',
+      lap,
+      car: ref(car),
+      position: last.outRank,
+      positionChange: last.positionChange,
+    });
   }
   return events;
 }
@@ -134,4 +151,13 @@ export function describeEvent(event: RaceEvent): string {
 
 function car(ref: CarRef): string {
   return `#${ref.carNumber} ${ref.name}`;
+}
+
+/** Extra context for the event log, e.g. "Gained 3 spots on pit road"; null when there's none. */
+export function pitRoadChange(event: RaceEvent): string | null {
+  if (event.kind !== 'pit-out' || event.positionChange === null) return null;
+  const n = Math.abs(event.positionChange);
+  if (n === 0) return 'No change on pit road';
+  const verb = event.positionChange > 0 ? 'Gained' : 'Lost';
+  return `${verb} ${n} ${n === 1 ? 'spot' : 'spots'} on pit road`;
 }
