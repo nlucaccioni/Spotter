@@ -202,3 +202,6 @@ Note, NoteID, DriverIDs }] } }`. Written commentary, current to the
 - **Per-series feed timestamp:** at the same time, `series_1/5629/live_feed.json` sent
   `time_of_day_os: "0001-01-01T00:00:00+00:00"` on every request, while `live-feed.json` (same
   race and lap) had the real time. The parser treats anything before 2000 as missing.
+- **`is_on_dvp` stays true after retiring:** #23, #24 and #48 kept `is_on_dvp: true` once they were
+  `status: 3`. At Kansas, #4 retired (likely mechanical) with `is_on_dvp: false`. The board hides
+  the DVP tag once a car is out.

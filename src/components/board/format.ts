@@ -49,6 +49,14 @@ export function formatStatus(car: CarState): { label: string; title: string } {
   return { label: `S${car.statusCode}`, title: `Unknown status code ${car.statusCode}` };
 }
 
+/**
+ * The DVP tag. The feed leaves `is_on_dvp` set after a damaged car retires (docs/feed-notes.md,
+ * 2026-10-11), when the clock no longer matters. GAR cars (status 6) keep it: they may return.
+ */
+export function showsDvp(car: CarState): boolean {
+  return car.isOnDvp && car.statusCode !== 3;
+}
+
 export function isOut(car: CarState): boolean {
   return (!car.isOnTrack && !car.isOnPitRoad) || car.statusCode === 3;
 }

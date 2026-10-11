@@ -11,6 +11,7 @@ import {
   formatPits,
   formatStatus,
   isOut,
+  showsDvp,
   PIT_INDICATOR_LABELS,
   pitIndicator,
 } from './board/format.ts';
@@ -137,7 +138,7 @@ function Cell({
               {BADGE_LABELS[badge].short}
             </span>
           ))}
-          {car.isOnDvp && (
+          {showsDvp(car) && (
             <span className="badge badge--dvp" title="Damaged Vehicle Policy clock active">
               DVP
             </span>

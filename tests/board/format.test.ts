@@ -5,6 +5,7 @@ import {
   formatPits,
   formatStatus,
   isOut,
+  showsDvp,
   pitIndicator,
 } from '../../src/components/board/format.ts';
 import { parseLiveFeed } from '../../src/data/feeds/liveFeed.parse.ts';
@@ -68,6 +69,13 @@ describe('format helpers', () => {
     expect(formatStatus(out).label).toBe('OUT');
     expect(isOut(out)).toBe(true);
     expect(isOut(larson)).toBe(false);
+  });
+
+  it('shows the DVP tag until the car is out', () => {
+    expect(showsDvp({ ...larson, isOnDvp: true })).toBe(true);
+    expect(showsDvp({ ...larson, isOnDvp: true, statusCode: 6, isOnTrack: false })).toBe(true);
+    expect(showsDvp({ ...larson, isOnDvp: true, statusCode: 3, isOnTrack: false })).toBe(false);
+    expect(showsDvp(larson)).toBe(false);
   });
 });
 
