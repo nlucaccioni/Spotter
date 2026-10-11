@@ -69,6 +69,10 @@
   border-radius: 3px;
 }
 
+.flag-banner--warmup {
+  background: var(--flag-warmup);
+}
+
 .flag-banner--unknown {
   background: var(--badge-bg);
   color: var(--text);

@@ -5,13 +5,16 @@ See `PROJECT_BRIEF.md` §3 for the baseline. Add a dated entry whenever somethin
 
 ## `flag_state`
 
-| Value | Meaning   | Confirmed |
-| ----- | --------- | --------- |
-| 1     | Green     | Yes       |
-| 2     | Yellow    | Believed  |
-| 3     | Red       | Believed  |
-| 4     | White     | Believed  |
-| 9     | Checkered | Yes       |
+| Value | Meaning   | Confirmed   |
+| ----- | --------- | ----------- |
+| 1     | Green     | Yes         |
+| 2     | Yellow    | Believed    |
+| 3     | Red       | Believed    |
+| 4     | White     | Believed    |
+| 8     | Warm-up   | Yes (owner) |
+| 9     | Checkered | Yes         |
+
+8 is unofficial (orange): warm-up laps are being timed but the event hasn't started (2026-10-11).
 
 ## `vehicles[].status`
 

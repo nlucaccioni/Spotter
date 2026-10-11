@@ -109,6 +109,7 @@ const FLAG_TEXT: Record<Flag['kind'], string> = {
   red: 'Red flag',
   white: 'White flag',
   checkered: 'Checkered flag',
+  warmup: 'Warm-up',
   unknown: '',
 };
 
