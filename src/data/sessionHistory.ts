@@ -8,7 +8,10 @@ import type { Session } from './model/types.ts';
 export interface TimedEvent {
   /** Unique, increasing. */
   id: number;
-  /** Epoch ms when the snapshot revealing the event arrived. */
+  /**
+   * Epoch ms of the snapshot revealing the event: the feed's own timestamp (track time), or when
+   * it arrived if the feed has none (the per-series feeds send a placeholder).
+   */
   at: number;
   event: RaceEvent;
 }
@@ -46,7 +49,8 @@ export function createSessionHistory(maxSnapshots = 20, maxEvents = 2000): Sessi
       const sameSession = prev !== null && isSameSession(prev, session);
       const diff = diffSessions(prev, session);
       const outLaps = outLapTracker.update(sameSession ? prev : null, session);
-      const fresh = diff.events.map((event) => ({ id: nextEventId++, at, event })).reverse();
+      const when = session.updatedAtMs ?? at;
+      const fresh = diff.events.map((event) => ({ id: nextEventId++, at: when, event })).reverse();
       events = [...fresh, ...events].slice(0, maxEvents);
       snapshots = [...snapshots, session].slice(-maxSnapshots);
       updateId += 1;

@@ -4,8 +4,14 @@ import type { Session } from '../src/data/model/types.ts';
 import { createSessionHistory } from '../src/data/sessionHistory.ts';
 import kansas from './fixtures/cup-2026-kansas-final.json';
 
-function session(flag: number, raceId = 5628): Session {
-  const result = parseLiveFeed({ ...structuredClone(kansas), flag_state: flag, race_id: raceId });
+// No feed timestamp by default, so events are stamped with the arrival time passed to push().
+function session(flag: number, raceId = 5628, timeOfDay: string | null = null): Session {
+  const result = parseLiveFeed({
+    ...structuredClone(kansas),
+    flag_state: flag,
+    race_id: raceId,
+    time_of_day_os: timeOfDay,
+  });
   if (!result.ok) throw new Error(result.error);
   return result.session;
 }
@@ -22,6 +28,13 @@ describe('createSessionHistory', () => {
       [2000, 'yellow'],
     ]);
     expect(update.events[0]!.id).toBeGreaterThan(update.events[1]!.id);
+  });
+
+  it("stamps events with the feed's own time when it has one", () => {
+    const history = createSessionHistory();
+    history.push(session(1), 1000);
+    const update = history.push(session(2, 5628, '2026-09-27T21:00:05.5-05:00'), 2000);
+    expect(update.events[0]!.at).toBe(Date.parse('2026-09-28T02:00:05.500Z'));
   });
 
   it('caps snapshots and events', () => {
