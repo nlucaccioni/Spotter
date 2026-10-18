@@ -138,6 +138,8 @@
    column stays pinned on the left; ±, Pos and # scroll away under it. */
 .timing--scroll-x {
   overflow: auto;
+  /* Keeps absolutely positioned screen-reader text inside the scroller (see .points__body). */
+  position: relative;
 }
 
 .timing--scroll-x .cell--driver,
@@ -1058,6 +1060,9 @@
   min-height: 0;
   /* Both ways, so the sticky header and driver column stick to the same scroller. */
   overflow: auto;
+  /* Contains absolutely positioned screen-reader text (e.g. "stage winner"), which would
+     otherwise escape the scroller and widen the whole page. */
+  position: relative;
 }
 
 .points-table-wrap {
