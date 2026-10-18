@@ -134,6 +134,27 @@
   overflow-y: auto;
 }
 
+/* Phones: every column is kept and the table (width set inline) scrolls sideways. The driver
+   column stays pinned on the left; ±, Pos and # scroll away under it. */
+.timing--scroll-x {
+  overflow: auto;
+}
+
+.timing--scroll-x .cell--driver,
+.timing--scroll-x th.col-driver {
+  position: sticky;
+  left: 0;
+  box-shadow: inset -1px 0 0 var(--border);
+}
+
+.timing--scroll-x .cell--driver {
+  background: inherit;
+}
+
+.timing--scroll-x th.col-driver {
+  z-index: 2;
+}
+
 /* Landscape: two side-by-side tables (gap set inline from SPLIT_GAP_PX). */
 .timing--split {
   display: grid;
@@ -1035,7 +1056,8 @@
 .points__body {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  /* Both ways, so the sticky header and driver column stick to the same scroller. */
+  overflow: auto;
 }
 
 .points-table-wrap {
@@ -1066,6 +1088,10 @@
   font-size: 0.8em;
   font-weight: 600;
   text-align: left;
+}
+
+.points-table tbody tr {
+  background: var(--bg);
 }
 
 .points-table tbody tr:nth-child(even) {
@@ -1129,5 +1155,32 @@
 
   .points-table .name-short {
     display: inline;
+  }
+}
+
+/* Phones: keep every column and swipe sideways for the ones that don't fit. The driver column
+   stays pinned on the left; Pos and # scroll away under it. Placed last so it overrides the
+   column hiding above. */
+@container (max-width: 560px) {
+  .points-table .p2,
+  .points-table .p3 {
+    display: table-cell;
+  }
+
+  .points-table {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .points-table .col-driver {
+    position: sticky;
+    left: 0;
+    background: inherit;
+    box-shadow: inset -1px 0 0 var(--border);
+  }
+
+  .points-table thead .col-driver {
+    z-index: 2;
+    background: var(--bg);
   }
 }

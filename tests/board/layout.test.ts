@@ -6,9 +6,11 @@ import {
   type ColumnId,
 } from '../../src/components/board/layout.ts';
 
-// Single-table layout, so column behaviour can be checked across any width.
+// Single table that drops columns, so column priority can be checked across any width.
 const ids = (width: number, height: number, cars = 40) =>
-  computeBoardLayout(width, height, cars, { allowSplit: false }).columns.map((c) => c.id);
+  computeBoardLayout(width, height, cars, { allowSplit: false, allowScrollX: false }).columns.map(
+    (c) => c.id,
+  );
 
 const ALWAYS = ['pos', 'car', 'driver', 'gap', 'interval', 'last'];
 
@@ -190,8 +192,28 @@ describe('computeBoardLayout — scrolling', () => {
   it('leaves room for a scrollbar when the table has to scroll', () => {
     // 386px at the 12px minimum font is ~32.2em: enough for Best (needs 31.4em) only if the
     // scrollbar's width is ignored. The table scrolls here, so Best must be left out.
-    const layout = computeBoardLayout(386, 600, 40, { allowSplit: false });
+    const layout = computeBoardLayout(386, 600, 40, { allowSplit: false, allowScrollX: false });
     expect(layout).toMatchObject({ scroll: true, fontSizePx: LIMITS.minFontPx });
     expect(layout.columns.map((c) => c.id)).not.toContain('best');
+  });
+});
+
+describe('computeBoardLayout — phones', () => {
+  it('keeps every column and scrolls sideways', () => {
+    const layout = computeBoardLayout(390, 750, 38, { extraRows: 1 });
+    expect(layout.columns).toHaveLength(COLUMNS.length);
+    expect(layout.nameFormat).toBe('initial');
+    expect(layout.tableWidthEm).not.toBeNull();
+    expect(layout.tableWidthEm! * layout.fontSizePx).toBeGreaterThan(390);
+  });
+
+  it('leaves hidden columns out', () => {
+    const layout = computeBoardLayout(390, 750, 38, { hidden: new Set<ColumnId>(['status']) });
+    expect(layout.columns.map((c) => c.id)).not.toContain('status');
+  });
+
+  it('only applies at phone widths', () => {
+    expect(computeBoardLayout(720, 1150, 40).tableWidthEm).toBeNull();
+    expect(computeBoardLayout(LIMITS.phoneWidthPx + 1, 900, 40).tableWidthEm).toBeNull();
   });
 });

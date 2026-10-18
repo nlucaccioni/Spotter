@@ -72,7 +72,7 @@ export function TimingTable({
   return (
     <div
       ref={containerRef}
-      className={`timing${layout?.scroll ? ' timing--scroll' : ''}${layout?.split ? ' timing--split' : ''}`}
+      className={`timing${layout?.scroll ? ' timing--scroll' : ''}${layout?.split ? ' timing--split' : ''}${layout?.tableWidthEm ? ' timing--scroll-x' : ''}`}
       style={layout?.split ? { gap: `${SPLIT_GAP_PX}px` } : undefined}
     >
       {layout &&
@@ -80,7 +80,11 @@ export function TimingTable({
           const from = firstIndex + 1;
           firstIndex += group.length;
           return (
-            <table key={groupIndex} className="timing-table">
+            <table
+              key={groupIndex}
+              className="timing-table"
+              style={layout.tableWidthEm ? { width: `${layout.tableWidthEm}em` } : undefined}
+            >
               <caption className="visually-hidden">
                 Timing board
                 {groups.length > 1 ? `, rows ${from} to ${firstIndex}` : ''}, sorted by{' '}

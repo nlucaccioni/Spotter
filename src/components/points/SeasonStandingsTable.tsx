@@ -27,7 +27,9 @@ export function SeasonStandingsTable({ standings, favorites, badgeFor }: Props) 
             <th scope="col" className="num">
               #
             </th>
-            <th scope="col">Driver</th>
+            <th scope="col" className="col-driver">
+              Driver
+            </th>
             <th scope="col" className="p2">
               Mfr
             </th>
@@ -75,7 +77,7 @@ export function SeasonStandingsTable({ standings, favorites, badgeFor }: Props) 
                 <td className="num muted">
                   <CarNumber number={s.carNumber || '—'} badgeUrl={badgeFor?.(s) ?? null} />
                 </td>
-                <td className="points-driver">
+                <td className="points-driver col-driver">
                   <DriverName name={s.name} />
                 </td>
                 <td className="p2">

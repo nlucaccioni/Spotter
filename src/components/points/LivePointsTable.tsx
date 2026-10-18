@@ -47,7 +47,9 @@ export function LivePointsTable({ entries, inRace, favorites, manufacturers, bad
             <th scope="col" className="num">
               #
             </th>
-            <th scope="col">Driver</th>
+            <th scope="col" className="col-driver">
+              Driver
+            </th>
             <th scope="col" className="p3">
               Mfr
             </th>
@@ -104,7 +106,7 @@ export function LivePointsTable({ entries, inRace, favorites, manufacturers, bad
                 <td className="num muted">
                   <CarNumber number={e.carNumber || '—'} badgeUrl={badgeFor?.(e) ?? null} />
                 </td>
-                <td className="points-driver">
+                <td className="points-driver col-driver">
                   <DriverName name={e.name} />
                   {e.name.badges.map((b) => (
                     <span

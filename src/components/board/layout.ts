@@ -95,6 +95,8 @@ export const LIMITS = {
   maxFontPx: 22,
   /** Table height ÷ width from which a screen counts as tall (21:9 portrait; 16:9 is ~1.65). */
   tallRatio: 2,
+  /** At or below this width (phones) every column is kept and the table scrolls sideways. */
+  phoneWidthPx: 560,
 };
 
 export interface LayoutOptions {
@@ -102,6 +104,8 @@ export interface LayoutOptions {
   hidden?: ReadonlySet<ColumnId>;
   /** Allow two side-by-side tables on landscape screens (default true). */
   allowSplit?: boolean;
+  /** Keep every column on phones and scroll sideways instead of dropping them (default true). */
+  allowScrollX?: boolean;
 }
 
 export interface BoardLayout {
@@ -113,6 +117,8 @@ export interface BoardLayout {
   nameFormat: NameFormat;
   /** Field split into two side-by-side tables (landscape; PROJECT_BRIEF.md §5.1). */
   split: boolean;
+  /** Table width in em when it's wider than the screen and scrolls sideways (phones), else null. */
+  tableWidthEm: number | null;
 }
 
 /** Horizontal gap between the two tables of a split layout. */
@@ -129,22 +135,54 @@ export const SCROLLBAR_PX = 16;
  * @param options.extraRows other elements sized as one row each, e.g. the flag banner
  * @param options.hidden columns the user turned off; their width goes to the others
  * @param options.allowSplit whether a landscape screen may use two side-by-side tables
+ * @param options.allowScrollX whether a phone keeps every column and scrolls sideways
  */
 export function computeBoardLayout(
   width: number,
   height: number,
   carCount: number,
-  { extraRows = 0, hidden = new Set<ColumnId>(), allowSplit = true }: LayoutOptions = {},
+  {
+    extraRows = 0,
+    hidden = new Set<ColumnId>(),
+    allowSplit = true,
+    allowScrollX = true,
+  }: LayoutOptions = {},
 ): BoardLayout {
   const single = fitTable(width, height, carCount, extraRows, hidden, true);
-  if (!allowSplit || width <= height || carCount < 2) return { ...single, split: false };
+  if (allowScrollX && width <= LIMITS.phoneWidthPx) {
+    return { ...scrollSideways(single, width, hidden), split: false };
+  }
+  if (!allowSplit || width <= height || carCount < 2) {
+    return { ...single, split: false, tableWidthEm: null };
+  }
 
   // Landscape: two tables of half the field each get taller rows (bigger text). Use them when
   // that's at least as readable and still fits the essential columns with short names.
   const halfWidth = (width - SPLIT_GAP_PX) / 2;
   const split = fitTable(halfWidth, height, Math.ceil(carCount / 2), extraRows, hidden, false);
   const usable = split.nameFormat !== 'last' && split.fontSizePx >= single.fontSizePx;
-  return usable ? { ...split, split: true } : { ...single, split: false };
+  return usable
+    ? { ...split, split: true, tableWidthEm: null }
+    : { ...single, split: false, tableWidthEm: null };
+}
+
+/** Phones: every column at the fitted text size, with initialed names, scrolling sideways. */
+function scrollSideways(
+  fitted: Omit<BoardLayout, 'split' | 'tableWidthEm'>,
+  width: number,
+  hidden: ReadonlySet<ColumnId>,
+): Omit<BoardLayout, 'split'> {
+  const columns = COLUMNS.filter((c) => !hidden.has(c.id));
+  const fixedEm = columns.reduce((sum, c) => sum + c.widthEm, 0);
+  const available = (fitted.scroll ? width - SCROLLBAR_PX : width) / fitted.fontSizePx;
+  const driverEm = Math.max(available - fixedEm, DRIVER_WIDTH_EM.initial);
+  const tableEm = fixedEm + driverEm;
+  return {
+    ...fitted,
+    columns,
+    nameFormat: driverEm >= DRIVER_WIDTH_EM.full ? 'full' : 'initial',
+    tableWidthEm: tableEm > available + 1e-6 ? tableEm : null,
+  };
 }
 
 function fitTable(
@@ -156,7 +194,7 @@ function fitTable(
   /** Keep text small enough for the priority-2 columns (off for split halves, which only need
    *  the essential columns). */
   fitPriorityTwo: boolean,
-): Omit<BoardLayout, 'split'> {
+): Omit<BoardLayout, 'split' | 'tableWidthEm'> {
   const rows = Math.max(1, carCount) + 1 + extraRows; // + table header row
   const fitted = Math.floor(height / rows);
   const scroll = fitted < LIMITS.minRowPx;
