@@ -38,22 +38,22 @@ export function LivePointsTable({ entries, inRace, favorites, manufacturers, bad
         <caption className="visually-hidden">Live race points</caption>
         <thead>
           <tr>
-            <th scope="col" className="num">
+            <th scope="col" className="num" title="Position in the standings">
               Pos
             </th>
             <th scope="col" className="num p2" title="Places gained in the standings this race">
               ±
             </th>
-            <th scope="col" className="num">
+            <th scope="col" className="num" title="Car number">
               #
             </th>
             <th scope="col" className="col-driver">
               Driver
             </th>
-            <th scope="col" className="p3">
+            <th scope="col" className="p3" title="Manufacturer">
               Mfr
             </th>
-            <th scope="col" className="num">
+            <th scope="col" className="num" title="Championship points">
               Points
             </th>
             <th scope="col" className="num" title="Behind the leader">

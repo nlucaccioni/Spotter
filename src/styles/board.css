@@ -1072,7 +1072,8 @@
 .points-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: clamp(0.9rem, 1.2vh, 1.15rem);
+  /* Grows with the window up to the timing board's largest text (22px). */
+  font-size: clamp(1rem, 2vh, 1.375rem);
 }
 
 .points-table th,
@@ -1093,6 +1094,11 @@
   font-size: 0.8em;
   font-weight: 600;
   text-align: left;
+}
+
+/* Header names are short; the full meaning is in a tooltip. */
+.points-table thead th[title] {
+  cursor: help;
 }
 
 .points-table tbody tr {

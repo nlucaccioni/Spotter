@@ -21,19 +21,19 @@ export function SeasonStandingsTable({ standings, favorites, badgeFor }: Props) 
         <caption className="visually-hidden">Season standings</caption>
         <thead>
           <tr>
-            <th scope="col" className="num">
+            <th scope="col" className="num" title="Position in the standings">
               Pos
             </th>
-            <th scope="col" className="num">
+            <th scope="col" className="num" title="Car number">
               #
             </th>
             <th scope="col" className="col-driver">
               Driver
             </th>
-            <th scope="col" className="p2">
+            <th scope="col" className="p2" title="Manufacturer">
               Mfr
             </th>
-            <th scope="col" className="num">
+            <th scope="col" className="num" title="Championship points">
               Points
             </th>
             <th scope="col" className="num" title="Behind the leader">
@@ -42,25 +42,25 @@ export function SeasonStandingsTable({ standings, favorites, badgeFor }: Props) 
             <th scope="col" className="num p2" title="Behind the driver ahead">
               Next
             </th>
-            <th scope="col" className="num">
+            <th scope="col" className="num" title="Race wins">
               Wins
             </th>
-            <th scope="col" className="num p2">
+            <th scope="col" className="num p2" title="Top-5 finishes">
               Top 5
             </th>
-            <th scope="col" className="num p2">
+            <th scope="col" className="num p2" title="Top-10 finishes">
               Top 10
             </th>
             <th scope="col" className="num p3" title="Stage wins">
               Stages
             </th>
-            <th scope="col" className="num p3">
+            <th scope="col" className="num p3" title="Laps led">
               Led
             </th>
             <th scope="col" className="num p3" title="Did not finish">
               DNF
             </th>
-            <th scope="col" className="num p3">
+            <th scope="col" className="num p3" title="Races started">
               Starts
             </th>
           </tr>
