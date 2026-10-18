@@ -1,6 +1,8 @@
 // Portrait-first board layout (PROJECT_BRIEF.md §5.1): size rows so the whole field fits the
-// available height, then pick columns by priority for the width that leaves. Pure, so it can be
-// unit-tested without a DOM.
+// available height, then pick columns by priority for the width that leaves. Text grows with the
+// rows, but never so far that the priority-2 columns stop fitting. Very tall screens (21:9
+// portrait) only reserve room for last names, so their text can stay close to 16:9's size. Pure,
+// so it can be unit-tested without a DOM.
 
 export type ColumnId =
   | 'pos'
@@ -37,7 +39,7 @@ export const COLUMNS: readonly ColumnDef[] = [
     label: '±',
     title: 'Positions gained since the start',
     priority: 2,
-    widthEm: 2.8,
+    widthEm: 2.2,
     align: 'right',
   },
   { id: 'pos', label: 'Pos', title: 'Position', priority: 1, widthEm: 2.2, align: 'right' },
@@ -91,6 +93,8 @@ export const LIMITS = {
   fontToRow: 0.5,
   minFontPx: 12,
   maxFontPx: 22,
+  /** Table height ÷ width from which a screen counts as tall (21:9 portrait; 16:9 is ~1.65). */
+  tallRatio: 2,
 };
 
 export interface LayoutOptions {
@@ -132,13 +136,13 @@ export function computeBoardLayout(
   carCount: number,
   { extraRows = 0, hidden = new Set<ColumnId>(), allowSplit = true }: LayoutOptions = {},
 ): BoardLayout {
-  const single = fitTable(width, height, carCount, extraRows, hidden);
+  const single = fitTable(width, height, carCount, extraRows, hidden, true);
   if (!allowSplit || width <= height || carCount < 2) return { ...single, split: false };
 
   // Landscape: two tables of half the field each get taller rows (bigger text). Use them when
   // that's at least as readable and still fits the essential columns with short names.
   const halfWidth = (width - SPLIT_GAP_PX) / 2;
-  const split = fitTable(halfWidth, height, Math.ceil(carCount / 2), extraRows, hidden);
+  const split = fitTable(halfWidth, height, Math.ceil(carCount / 2), extraRows, hidden, false);
   const usable = split.nameFormat !== 'last' && split.fontSizePx >= single.fontSizePx;
   return usable ? { ...split, split: true } : { ...single, split: false };
 }
@@ -149,22 +153,34 @@ function fitTable(
   carCount: number,
   extraRows: number,
   hidden: ReadonlySet<ColumnId>,
+  /** Keep text small enough for the priority-2 columns (off for split halves, which only need
+   *  the essential columns). */
+  fitPriorityTwo: boolean,
 ): Omit<BoardLayout, 'split'> {
   const rows = Math.max(1, carCount) + 1 + extraRows; // + table header row
   const fitted = Math.floor(height / rows);
   const scroll = fitted < LIMITS.minRowPx;
   const rowHeightPx = clamp(fitted, LIMITS.minRowPx, LIMITS.maxRowPx);
+  const tableWidth = scroll ? width - SCROLLBAR_PX : width;
+  // Tall screens trade name length for text size; others keep room for longer names.
+  const tall = height / width >= LIMITS.tallRatio;
+  const capNameEm = tall ? DRIVER_WIDTH_EM.last : DRIVER_WIDTH_EM.full;
+  const minNameEm = tall ? DRIVER_WIDTH_EM.last : DRIVER_WIDTH_EM.initial;
+  // Widest text at which the priority-1 and -2 columns still fit with names of that length.
+  const essential = COLUMNS.filter((c) => c.priority <= 2 && !hidden.has(c.id));
+  const essentialEm = essential.reduce((sum, c) => sum + c.widthEm, 0) + capNameEm;
+  const widthFont = fitPriorityTwo ? Math.floor(tableWidth / essentialEm) : Infinity;
   const fontSizePx = clamp(
-    Math.round(rowHeightPx * LIMITS.fontToRow),
+    Math.min(Math.round(rowHeightPx * LIMITS.fontToRow), widthFont),
     LIMITS.minFontPx,
     LIMITS.maxFontPx,
   );
 
-  const available = (scroll ? width - SCROLLBAR_PX : width) / fontSizePx;
+  const available = tableWidth / fontSizePx;
   const chosen = new Set<ColumnId>(
     COLUMNS.filter((c) => c.priority === 1 && !hidden.has(c.id)).map((c) => c.id),
   );
-  let used = sumWidths(chosen) + DRIVER_WIDTH_EM.initial;
+  let used = sumWidths(chosen) + minNameEm;
   for (const id of OPTIONAL_ORDER) {
     if (hidden.has(id)) continue;
     const w = column(id).widthEm;

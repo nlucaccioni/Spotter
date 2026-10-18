@@ -45,13 +45,18 @@ describe('computeBoardLayout — column priority', () => {
 
   it('adds columns in priority order as width grows, never skipping ahead', () => {
     const order: ColumnId[] = ['best', 'change', 'led', 'pits', 'mfr', 'laps', 'status'];
+    const priorityTwo = order.slice(0, 4);
     let previous = 0;
     for (let width = 360; width <= 2000; width += 20) {
       const shown = ids(width, 1700).filter((id) => order.includes(id));
       // Whatever is shown is always a prefix of the priority order.
       const expected = order.filter((id) => shown.includes(id));
       expect(shown.sort()).toEqual(order.slice(0, expected.length).sort());
-      expect(shown.length).toBeGreaterThanOrEqual(previous);
+      // Text steps up a pixel as the width grows, which can briefly drop a priority-3 column,
+      // but never a priority-2 one once they all fit.
+      if (previous >= priorityTwo.length) {
+        expect(shown.length).toBeGreaterThanOrEqual(priorityTwo.length);
+      }
       previous = shown.length;
     }
     expect(previous).toBe(order.length);
@@ -63,9 +68,29 @@ describe('computeBoardLayout — column priority', () => {
     [864, 1400],
     [1080, 1750],
     [1440, 2400],
+    // 21:9 portrait at the same widths: taller rows mustn't grow the text enough to drop columns.
+    [720, 1550],
+    [864, 1880],
+    [1080, 2400],
+    [1440, 3250],
   ])('shows every priority-2 column at %i×%i', (width, height) => {
     const shown = ids(width, height);
     for (const id of ['best', 'change', 'led', 'pits']) expect(shown).toContain(id);
+  });
+
+  it('stops growing the text once the priority-2 columns would no longer fit', () => {
+    const layout = computeBoardLayout(720, 1400, 40, { allowSplit: false });
+    expect(layout.fontSizePx).toBeLessThan(Math.round(layout.rowHeightPx * LIMITS.fontToRow));
+    for (const id of ['best', 'change', 'led', 'pits']) {
+      expect(layout.columns.map((c) => c.id)).toContain(id);
+    }
+  });
+
+  it('lets the text grow again when columns are hidden', () => {
+    const hidden = new Set<ColumnId>(['best', 'change', 'led', 'pits']);
+    const all = computeBoardLayout(720, 1400, 40, { allowSplit: false });
+    const fewer = computeBoardLayout(720, 1400, 40, { allowSplit: false, hidden });
+    expect(fewer.fontSizePx).toBeGreaterThan(all.fontSizePx);
   });
 
   it('shows every column on a wide screen', () => {
@@ -83,6 +108,23 @@ describe('computeBoardLayout — driver name length', () => {
   it('shortens names as the driver column narrows', () => {
     expect(computeBoardLayout(1440, 2400, 36).nameFormat).toBe('full');
     expect(computeBoardLayout(360, 600, 40).nameFormat).not.toBe('full');
+  });
+});
+
+describe('computeBoardLayout — tall screens (21:9 portrait)', () => {
+  it('uses last names to keep the text close to 16:9 size', () => {
+    const sixteenNine = computeBoardLayout(864, 1400, 40, { allowSplit: false });
+    const tall = computeBoardLayout(864, 1880, 40, { allowSplit: false });
+    expect(sixteenNine.nameFormat).not.toBe('last');
+    expect(tall.nameFormat).toBe('last');
+    expect(tall.fontSizePx).toBeGreaterThan(sixteenNine.fontSizePx);
+    for (const id of ['best', 'change', 'led', 'pits']) {
+      expect(tall.columns.map((c) => c.id)).toContain(id);
+    }
+  });
+
+  it('still uses longer names when the width allows', () => {
+    expect(computeBoardLayout(1440, 3250, 40).nameFormat).toBe('full');
   });
 });
 
