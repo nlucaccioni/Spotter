@@ -6,23 +6,21 @@ import type { Manufacturer, Session } from '../../data/model/types.ts';
 import { useCarBadges } from '../../hooks/useCarBadges.ts';
 import { usePolledFeed, type PolledFeed } from '../../hooks/usePolledFeed.ts';
 import { usePreferences } from '../../hooks/usePreferences.ts';
-import { formatDuration } from '../board/format.ts';
-import { useNow } from '../../hooks/useNow.ts';
 import { LivePointsTable } from './LivePointsTable.tsx';
 import { SeasonStandingsTable } from './SeasonStandingsTable.tsx';
 
 type Tab = 'live' | 'season';
 
 interface Props {
-  /** The live session on the board (after the TV delay), if any. */
+  /** The live session on the board (after the TV delay), if any. The points feeds themselves
+   * aren't delayed: the TV delay only applies to the live timing. */
   session: Session | null;
   /** Live points for the race the board is following; null while that's being worked out. */
   livePointsUrl: string | null;
-  delaySeconds: number;
 }
 
 /** Live race points and season standings (PROJECT_BRIEF.md "Later milestones"). */
-export function PointsPage({ session, livePointsUrl, delaySeconds }: Props) {
+export function PointsPage({ session, livePointsUrl }: Props) {
   const [prefs] = usePreferences();
   const [tab, setTab] = useState<Tab>('live');
   const liveSeries = session?.series.id ?? 1;
@@ -33,15 +31,11 @@ export function PointsPage({ session, livePointsUrl, delaySeconds }: Props) {
 
   const live = usePolledFeed(tab === 'live' ? livePointsUrl : null, parseLivePoints, {
     intervalMs: 15_000,
-    delaySeconds,
   });
   const season = usePolledFeed(
     tab === 'season' ? seasonPointsUrl(year, seasonSeries) : null,
     parseSeasonPoints,
-    {
-      intervalMs: 120_000,
-      delaySeconds,
-    },
+    { intervalMs: 120_000 },
   );
 
   const favorites = useMemo(() => new Set(prefs.favorites), [prefs.favorites]);
@@ -116,9 +110,8 @@ export function PointsPage({ session, livePointsUrl, delaySeconds }: Props) {
   );
 }
 
-/** Loading, holding-for-delay, error and empty messages for a points feed. */
+/** Loading, error and empty messages for a points feed. */
 function FeedState({ feed }: { feed: PolledFeed<unknown[]> }) {
-  const now = useNow();
   if (feed.status === 'error') {
     return (
       <div className="points__message" role="alert">
@@ -129,14 +122,6 @@ function FeedState({ feed }: { feed: PolledFeed<unknown[]> }) {
           Retry
         </button>
       </div>
-    );
-  }
-  if (!feed.data && feed.holdingUntil !== null) {
-    return (
-      <p className="points__message">
-        Holding for your TV delay — first update in{' '}
-        {formatDuration(Math.max(0, feed.holdingUntil - now))}.
-      </p>
     );
   }
   if (!feed.data) return <p className="points__message">Loading points…</p>;
