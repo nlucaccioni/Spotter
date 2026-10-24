@@ -17,6 +17,7 @@ import { useApplyTheme, usePreferences } from './hooks/usePreferences.ts';
 export default function App() {
   const {
     session,
+    latestSession,
     status,
     lastChanged,
     nextPollAt,
@@ -51,11 +52,7 @@ export default function App() {
     <div className={`app${idle ? ' app--idle' : ''}`}>
       {route === 'points' ? (
         <ErrorBoundary>
-          <PointsPage
-            session={session}
-            livePointsUrl={source.pointsUrl}
-            delaySeconds={delaySeconds}
-          />
+          <PointsPage session={latestSession} livePointsUrl={source.pointsUrl} />
         </ErrorBoundary>
       ) : session ? (
         <>
@@ -90,7 +87,11 @@ export default function App() {
         <span className="app__disclaimer">
           Unofficial fan project. Not affiliated with or endorsed by NASCAR. Data © NASCAR.
         </span>
-        <FooterClock lastUpdated={lastUpdated} delaySeconds={delaySeconds} />
+        {/* The TV delay only holds back the live timing, so it isn't shown on other pages. */}
+        <FooterClock
+          lastUpdated={lastUpdated}
+          delaySeconds={route === 'points' ? 0 : delaySeconds}
+        />
         {/* In the footer so they never cover timing data. */}
         <Controls
           route={route}

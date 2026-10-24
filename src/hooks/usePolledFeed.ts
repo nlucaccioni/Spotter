@@ -22,21 +22,21 @@ export interface PolledFeed<T> {
 interface Options {
   /** Polling interval while the page is open (the poller's jitter, floor and backoff apply). */
   intervalMs: number;
-  /** TV delay: show each update this many seconds after it arrives. */
-  delaySeconds: number;
+  /** TV delay: show each update this many seconds after it arrives (default none). */
+  delaySeconds?: number;
 }
 
 const fetcher = createFeedFetcher();
 
 /**
  * Polls a JSON feed while the component is mounted, through the same polling engine as the live
- * feed (jitter, backoff, pause when hidden, one request at a time) and the same TV delay.
+ * feed (jitter, backoff, pause when hidden, one request at a time), optionally behind the TV delay.
  * A null `url` means "nothing to fetch yet".
  */
 export function usePolledFeed<T>(
   url: string | null,
   parse: (raw: unknown) => T,
-  { intervalMs, delaySeconds }: Options,
+  { intervalMs, delaySeconds = 0 }: Options,
 ): PolledFeed<T> {
   // State is tagged with the URL it belongs to, so switching feeds never shows the old data.
   const [state, setState] = useState<{ url: string | null } & Omit<PolledFeed<T>, 'retry'>>({
