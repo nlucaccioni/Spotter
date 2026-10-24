@@ -12,8 +12,8 @@ import { SeasonStandingsTable } from './SeasonStandingsTable.tsx';
 type Tab = 'live' | 'season';
 
 interface Props {
-  /** The live session on the board (after the TV delay), if any. The points feeds themselves
-   * aren't delayed: the TV delay only applies to the live timing. */
+  /** The newest live session, if any. Nothing here is delayed: the TV delay only applies to the
+   * live timing. */
   session: Session | null;
   /** Live points for the race the board is following; null while that's being worked out. */
   livePointsUrl: string | null;
@@ -40,7 +40,7 @@ export function PointsPage({ session, livePointsUrl }: Props) {
 
   const favorites = useMemo(() => new Set(prefs.favorites), [prefs.favorites]);
   const badgeFor = useCarBadges(prefs.showCarBadges, tab === 'live' ? liveSeries : seasonSeries);
-  // The live points feed has no manufacturer; take it from the race on the board.
+  // The live points feed has no manufacturer; take it from the live feed.
   const manufacturers = useMemo(
     () =>
       new Map<number, Manufacturer>(

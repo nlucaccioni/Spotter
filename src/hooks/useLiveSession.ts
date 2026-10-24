@@ -155,6 +155,8 @@ export function useLiveSession() {
   );
   return {
     session: shown?.value.session ?? null,
+    /** The newest session received, ignoring the TV delay (for pages other than the board). */
+    latestSession: poll.data?.session ?? null,
     status: poll.status,
     error: poll.error,
     /** When the data on screen arrived (so with a TV delay, it's that long ago). */

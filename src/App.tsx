@@ -17,6 +17,7 @@ import { useApplyTheme, usePreferences } from './hooks/usePreferences.ts';
 export default function App() {
   const {
     session,
+    latestSession,
     status,
     lastChanged,
     nextPollAt,
@@ -51,7 +52,7 @@ export default function App() {
     <div className={`app${idle ? ' app--idle' : ''}`}>
       {route === 'points' ? (
         <ErrorBoundary>
-          <PointsPage session={session} livePointsUrl={source.pointsUrl} />
+          <PointsPage session={latestSession} livePointsUrl={source.pointsUrl} />
         </ErrorBoundary>
       ) : session ? (
         <>
