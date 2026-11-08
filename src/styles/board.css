@@ -1178,12 +1178,22 @@
   object-position: center;
 }
 
-/* With logos chosen, teams without one show their shorthand, centered like the logos. */
+/* With logos chosen, teams without one show their shorthand, centered like the logos. The
+   padding (cancelled by the margin, so rows keep their height) stops the overflow clip from
+   cutting off descenders under the tables' tight line height. */
 .team-logo-fallback {
   display: block;
+  margin-block: -0.2em;
+  padding-block: 0.2em;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* With logos chosen, the Team header is centered over them. */
+.points-table thead th.th--centered,
+.timing-table thead th.th--centered {
+  text-align: center;
 }
 
 /* On the leaderboard, 15% smaller than on the points page. */
@@ -1214,6 +1224,13 @@
   }
 }
 
+/* The season table's extras (poles, top-5 rate) go before anything else. */
+@container (max-width: 1120px) {
+  .points-table--season .p4 {
+    display: none;
+  }
+}
+
 @container (max-width: 520px) {
   .points-table .p2 {
     display: none;
@@ -1240,7 +1257,8 @@
    column hiding above. */
 @container (max-width: 560px) {
   .points-table .p2,
-  .points-table .p3 {
+  .points-table .p3,
+  .points-table .p4 {
     display: table-cell;
   }
 
@@ -1260,4 +1278,581 @@
     z-index: 2;
     background: var(--bg);
   }
+}
+
+/* ---- Analysis page (shares the points page's header, body and table styles) ---- */
+
+/* Grows with the window like the points tables. Everything below is in em so it follows. */
+.analysis__body {
+  padding: 12px;
+  /* 80% of the points tables' scale (owner request). */
+  font-size: calc(clamp(1rem, 2vh, 1.375rem) * 0.8);
+}
+
+.analysis__grid {
+  display: grid;
+  gap: 12px;
+  max-width: 1400px;
+  margin-inline: auto;
+}
+
+.analysis__pair {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr));
+  align-items: start;
+}
+
+/* Stage tables: position, car and driver packed to the left, points at the right. */
+.analysis__stage-title {
+  margin: 0 0 4px;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.analysis__stage .points-table .col-fill {
+  width: 100%;
+}
+
+.analysis__stages {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.analysis__race-select .series-select__input {
+  max-width: min(60vw, 360px);
+}
+
+.analysis-card {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.analysis-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 8px;
+}
+
+.analysis-card__header h2 {
+  margin: 0;
+  font-size: 1.15em;
+}
+
+.analysis-card__note {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+  font-size: 0.85em;
+}
+
+.analysis-card__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Tables inside cards scroll on their own instead of widening the page. */
+.analysis-table {
+  overflow-x: auto;
+}
+
+.analysis-table .points-table {
+  font-size: 1em;
+}
+
+.analysis-table .points-table tbody tr,
+.analysis-table .points-table thead th {
+  background: var(--surface);
+}
+
+.analysis-table .points-table tbody tr:nth-child(even) {
+  background: var(--row-alt);
+}
+
+.analysis-table--wide .points-table .col-driver {
+  position: sticky;
+  left: 0;
+  background: inherit;
+  box-shadow: inset -1px 0 0 var(--border);
+}
+
+.analysis-table__sort {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.analysis-table__sort:focus-visible {
+  outline: 2px solid var(--badge-pit);
+  outline-offset: 2px;
+}
+
+.analysis .up {
+  color: var(--up);
+}
+
+.analysis .down {
+  color: var(--down);
+}
+
+.analysis-row--picked .points-driver {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* Picked drivers: the chart legend, and how drivers are added or removed. */
+/* Shown above the race view for seasons without lap-by-lap data. */
+.analysis__notice {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+}
+
+/* Zoom controls above the championship chart. */
+.chart-zoom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-bottom: 8px;
+  font-size: 0.85em;
+}
+
+.chart-zoom__toggle {
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.chart-zoom__toggle:hover {
+  background: var(--badge-bg);
+}
+
+.chart-zoom__toggle[aria-pressed='true'] {
+  border-color: var(--text-muted);
+  background: var(--badge-bg);
+  color: var(--text);
+}
+
+.chart-zoom__toggle:focus-visible {
+  outline: 2px solid var(--badge-pit);
+  outline-offset: 2px;
+}
+
+.chart-zoom__hint {
+  color: var(--text-muted);
+}
+
+/* Touch screens pinch and pan instead of dragging. */
+@media (pointer: coarse) {
+  .chart-zoom__hint {
+    display: none;
+  }
+}
+
+.driver-picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 0.85em;
+}
+
+.driver-picker__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.driver-picker__remove {
+  display: inline-flex;
+  padding: 2px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.driver-picker__remove:hover,
+.driver-picker__remove:focus-visible {
+  color: var(--text);
+  background: var(--badge-bg);
+}
+
+/* The Clear all and Default picks buttons borrow the drawer's link style, minus its top
+   margin, so they line up with the chips and the menu. */
+.driver-picker .drawer__link {
+  margin-top: 0;
+}
+
+.driver-picker__add {
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+/* ---- Charts ---- */
+
+.chart {
+  position: relative;
+  width: 100%;
+}
+
+.chart svg {
+  display: block;
+  overflow: visible;
+  touch-action: pan-y;
+}
+
+.chart svg:focus-visible {
+  outline: 2px solid var(--badge-pit);
+  outline-offset: 2px;
+}
+
+.chart__grid {
+  stroke: var(--chart-grid);
+  stroke-width: 1;
+}
+
+.chart__axis {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+}
+
+.chart__tick,
+.chart__rule-label {
+  fill: var(--text-muted);
+  font-size: 0.8em;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart__rule {
+  stroke: var(--chart-axis);
+  stroke-width: 1;
+}
+
+.chart__band {
+  fill: color-mix(in srgb, var(--flag-yellow) 13%, transparent);
+}
+
+.chart__line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* The line under the pointer: thicker, on top, with the other highlighted lines faded. */
+.chart__line--hot {
+  stroke-width: 3.5;
+}
+
+.chart__lines--dim .chart__line:not(.chart__line--hot),
+.chart__lines--dim .chart__dot {
+  opacity: 0.35;
+}
+
+.chart__line-label {
+  position: absolute;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  font-size: 0.8em;
+  font-weight: 600;
+  pointer-events: none;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+.chart__tooltip-row--hot .chart__tooltip-label {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.chart__line--context {
+  stroke: var(--chart-context);
+  stroke-width: 1;
+}
+
+/* A surface-coloured ring keeps dots readable where lines cross. */
+.chart__dot {
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.chart__crosshair {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+}
+
+.chart__hit {
+  fill: transparent;
+}
+
+/* Drag across a zoomable chart to zoom into those races. */
+.chart svg.chart--zoomable {
+  cursor: crosshair;
+}
+
+.chart__selection {
+  fill: color-mix(in srgb, var(--text) 12%, transparent);
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.chart__tooltip {
+  position: absolute;
+  z-index: 5;
+  min-width: 140px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  font-size: 0.8em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.chart__tooltip-title {
+  margin-bottom: 4px;
+  color: var(--text-muted);
+}
+
+.chart__tooltip-more {
+  margin-top: 4px;
+  color: var(--text-muted);
+}
+
+.chart__tooltip-rows {
+  column-gap: 16px;
+}
+
+.chart__tooltip-row {
+  break-inside: avoid;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.5;
+}
+
+.chart__tooltip-rank {
+  min-width: 1.6em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.chart__tooltip-value {
+  min-width: 3.5em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart__tooltip-label {
+  color: var(--text-muted);
+}
+
+/* Line key: a short stroke of the series colour. */
+.chart__key {
+  display: inline-block;
+  flex: none;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.chart--strip {
+  margin-top: 4px;
+}
+
+.chart__segment rect {
+  transition: opacity 0.1s;
+}
+
+.chart__segment:hover rect {
+  opacity: 0.8;
+}
+
+.chart__segment--context {
+  fill: var(--chart-context-strong);
+}
+
+.chart__segment-label {
+  fill: var(--text);
+  font-size: 0.6em;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.chart__caution {
+  fill: var(--flag-yellow);
+}
+
+.chart__tooltip--strip {
+  min-width: 0;
+}
+
+/* Favorite drivers get the same edge mark as in the tables, just outside the row so the bars
+   stay lined up. */
+.pace-bars__row--favorite {
+  position: relative;
+}
+
+.pace-bars__row--favorite::before {
+  position: absolute;
+  inset: 0 auto 0 -8px;
+  width: 0.25em;
+  background: var(--favorite);
+  content: '';
+}
+
+/* Green-flag pace: one bar per car, time off the fastest. */
+.pace-bars {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85em;
+}
+
+.pace-bars__row {
+  display: grid;
+  grid-template-columns: minmax(7.5em, 10em) 1fr;
+  align-items: center;
+  gap: 8px;
+  min-height: 1.4em;
+}
+
+.pace-bars__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pace-bars__track {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* Leaves room for the value after the longest bar. */
+  padding-right: 4.5em;
+}
+
+.pace-bars__bar {
+  height: 0.75em;
+  border-radius: 0 4px 4px 0;
+}
+
+.pace-bars__bar--context {
+  background: var(--chart-context-strong);
+}
+
+.pace-bars__value {
+  flex: none;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+/* Race facts: the race's headline numbers. */
+.race-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
+.race-facts__item {
+  flex: 1 1 150px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.race-facts__item[title] {
+  cursor: help;
+}
+
+.race-facts dt {
+  color: var(--text-muted);
+  font-size: 0.8em;
+}
+
+.race-facts dd {
+  margin: 2px 0 0;
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.analysis__race-select .series-select__input,
+.analysis__year-select .series-select__input {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: none;
+}
+
+/* The championship card full screen: the browser's full-screen mode, or covering the page
+   where that isn't available. */
+.analysis-card:fullscreen,
+.analysis-card--full {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: 100dvh;
+  overflow: hidden;
+  padding: 16px;
+  border-radius: 0;
+  background: var(--surface);
+  font-size: calc(clamp(1rem, 2vh, 1.375rem) * 0.8);
+}
+
+/* Full screen, the chart (or table) fills the room left under the header and controls; a long
+   table scrolls inside it. */
+.analysis-card:fullscreen .analysis-card__fill,
+.analysis-card--full .analysis-card__fill {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.analysis-card--full:not(:fullscreen) {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
 }

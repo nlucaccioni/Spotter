@@ -31,7 +31,7 @@ export function parseWeekendTeams(raw: unknown): Map<number, string> {
 }
 
 /** Trimmed, with blanks and bare ids (e.g. "2215") dropped. */
-function cleanTeamName(name: string): string | null {
+export function cleanTeamName(name: string): string | null {
   const trimmed = name.trim().replace(/\s+/g, ' ');
   return trimmed && !/^\d+$/.test(trimmed) ? trimmed : null;
 }

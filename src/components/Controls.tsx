@@ -1,4 +1,5 @@
 import {
+  ChartLine,
   ChevronsUpDown,
   ListOrdered,
   Maximize,
@@ -80,6 +81,16 @@ export function Controls({
           title="Points"
         >
           <Trophy {...ICON} />
+        </button>
+        <button
+          type="button"
+          className="control-button"
+          onClick={() => onNavigate('analysis')}
+          aria-current={route === 'analysis' ? 'page' : undefined}
+          aria-label="Analysis"
+          title="Analysis"
+        >
+          <ChartLine {...ICON} />
         </button>
       </nav>
       {canFullscreen && (

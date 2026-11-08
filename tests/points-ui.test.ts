@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { formatBehind } from '../src/components/points/format.ts';
+import { formatBehind, formatRate } from '../src/components/points/format.ts';
+
+describe('formatRate', () => {
+  it('gives a whole percentage of starts, blank when there is none', () => {
+    expect(formatRate(13, 33)).toBe('39%');
+    expect(formatRate(0, 33)).toBe('');
+    expect(formatRate(0, 0)).toBe('');
+  });
+});
 import { hashForRoute, routeFromHash } from '../src/hooks/useHashRoute.ts';
 
 describe('hash routing', () => {
@@ -11,6 +19,8 @@ describe('hash routing', () => {
     expect(routeFromHash('#/pointsxyz')).toBe('timing');
     expect(hashForRoute('points')).toBe('#/points');
     expect(routeFromHash(hashForRoute('timing'))).toBe('timing');
+    expect(routeFromHash('#/analysis')).toBe('analysis');
+    expect(hashForRoute('analysis')).toBe('#/analysis');
   });
 });
 

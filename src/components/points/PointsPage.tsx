@@ -12,6 +12,7 @@ import { usePreferences } from '../../hooks/usePreferences.ts';
 import { teamDisplayFor } from '../../prefs/preferences.ts';
 import { LivePointsTable } from './LivePointsTable.tsx';
 import { SeasonStandingsTable } from './SeasonStandingsTable.tsx';
+import { Segmented } from '../Segmented.tsx';
 
 type Tab = 'live' | 'season';
 
@@ -169,32 +170,4 @@ function FeedState({ feed }: { feed: PolledFeed<unknown[]> }) {
   if (!feed.data) return <p className="points__message">Loading points…</p>;
   if (feed.data.length === 0) return <p className="points__message">No points available yet.</p>;
   return null;
-}
-
-function Segmented<T extends string | number>({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: readonly (readonly [T, string])[];
-  value: T;
-  onChange: (value: T) => void;
-}) {
-  return (
-    <div className="segmented-control" role="group" aria-label={label}>
-      {options.map(([option, text]) => (
-        <button
-          key={option}
-          type="button"
-          className="segmented-control__option"
-          aria-pressed={option === value}
-          onClick={() => onChange(option)}
-        >
-          {text}
-        </button>
-      ))}
-    </div>
-  );
 }

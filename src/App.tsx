@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { AnalysisPage } from './components/analysis/AnalysisPage.tsx';
 import { Board } from './components/Board.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { FeedStatusScreen } from './components/FeedStatusScreen.tsx';
@@ -42,9 +43,9 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
   const [eventLogOpen, setEventLogOpen] = useState(false);
-  // The series on screen: the board's session, or whichever the points page is showing.
+  // The series on screen: the board's session, or whichever the points or analysis page shows.
   const [pointsSeries, setPointsSeries] = useState<number | null>(null);
-  const pageSeries = route === 'points' ? pointsSeries : (session?.series.id ?? null);
+  const pageSeries = route === 'timing' ? (session?.series.id ?? null) : pointsSeries;
   const closeEventLog = useCallback(() => setEventLogOpen(false), []);
 
   // Keep the screen awake only while a session is actually running.
@@ -53,7 +54,11 @@ export default function App() {
 
   return (
     <div className={`app${idle ? ' app--idle' : ''}`}>
-      {route === 'points' ? (
+      {route === 'analysis' ? (
+        <ErrorBoundary>
+          <AnalysisPage session={latestSession} onSeriesShown={setPointsSeries} />
+        </ErrorBoundary>
+      ) : route === 'points' ? (
         <ErrorBoundary>
           <PointsPage
             session={latestSession}
@@ -97,7 +102,7 @@ export default function App() {
         {/* The TV delay only holds back the live timing, so it isn't shown on other pages. */}
         <FooterClock
           lastUpdated={lastUpdated}
-          delaySeconds={route === 'points' ? 0 : delaySeconds}
+          delaySeconds={route === 'timing' ? delaySeconds : 0}
         />
         {/* In the footer so they never cover timing data. */}
         <Controls

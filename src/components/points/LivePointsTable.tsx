@@ -72,7 +72,12 @@ export function LivePointsTable({
             <th scope="col" className="p3" title="Manufacturer">
               Mfr
             </th>
-            <th scope="col" className="p3" title="Team">
+            {/* Centered over logos, which sit centered in the column. */}
+            <th
+              scope="col"
+              className={teamDisplay === 'logo' ? 'p3 th--centered' : 'p3'}
+              title="Team"
+            >
               Team
             </th>
             <th scope="col" className="num" title="Championship points">

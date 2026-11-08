@@ -228,3 +228,50 @@ Note, NoteID, DriverIDs }] } }`. Written commentary, current to the
   and names differ slightly ("Trackhouse" vs "Trackhouse Racing"), so the app matches on the
   name, ignoring case, punctuation and a trailing "Racing". No O'Reilly or Truck teams, and no
   short names: the shorthands (HMS, JGR…) are kept in `src/data/feeds/teams.ts`.
+
+### 2026-11-07 — Feeds for the analysis page
+
+- **`race_list_basic.json`** also has `race_type_id` (1 = points race; 2 = exhibitions such as the
+  Clash and the Duels) and `winner_driver_id` (null until the race is run). The analysis page uses
+  them to pick the season's points races that have been run.
+- **`weekend-feed.json` results** carry `starting_position`, `finishing_position` (0 before the
+  race, while the list is still the entry list), `laps_led`, `finishing_status`, `points_earned`
+  and `points_position` (place in the standings after the race). The race also has
+  `stage_N_laps` (per stage, not cumulative), `stage_results`, `race_leaders` (lap 0 is the pole
+  sitter "leading" before the start, dropped), `number_of_lead_changes`, `margin_of_victory` and
+  `average_speed`.
+- **`cacher/{year}/{series}/{race_id}/lap-times.json`** (~630 KB, CORS `*`): `laps[]` per car
+  (`Number`, `FullName` with marks like `" (C)"`, `" (i)"` and a rookie `" #"`, `Manufacturer`
+  code, `NASCARDriverID`, `Laps[]` of `{ Lap, LapTime, LapSpeed, RunningPos }`; lap 0 is the grid)
+  and `flags[]` of `{ LapsCompleted, FlagState }`, the flag at the end of each lap. Its caution
+  laps are about 2 laps earlier than the weekend feed's `caution_segments`.
+- **`cacher/{year}/{series}/{race_id}/live-pit-data.json`** (~170 KB, CORS `*`): one row per stop
+  (Cup Kansas 5628: 267 rows for 36 cars). Each car has a lap-0 placeholder with `-1` times,
+  dropped. `total_duration` is pit road entry to exit, `pit_stop_duration` the stationary time,
+  `positions_gained_lost` the change from `pit_in_rank` to `pit_out_rank` (negative = lost).
+  Green-flag stops always lose many places, so the page sums places gained under caution only.
+- **Owner and manufacturer standings** (found from nascar.com's standings page, CORS `*`, all three
+  series, 2025 and 2026): `cacher/{year}/{series}/final/{series}-owners-points.json` (~15 KB; one
+  row per car entry: `owner_name`, `vehicle_number`, `points`, `delta_leader`, `wins`, `top_5`,
+  `dnf`, …) and `cacher/{year}/{series}/final/{series}-manufacturer-points.json` (~1 KB:
+  `manufacturer`, `points`, `wins`, `delta_leader`; `position` is a string). Owner points are per
+  car, not per team, which is how NASCAR scores the owners' championship. Parsed in
+  `src/data/feeds/standings.ts`: the analysis page ranks teams by their best owner car, shows
+  manufacturer points and lists the owner standings. Only today's standings are published, not
+  race by race.
+- **Official standings after each race:** `live/feeds/series_{series}/{race_id}/live_points.json`
+  stays up after the race, frozen at its final state, and its `points` is the official season
+  total then. Checked across all 35 run Cup races of 2026: the playoff reset shows at race 27
+  (Larson 724 → 2086) and race 35's totals equal today's `points-feed.json`. A penalty given
+  after a race only shows in the next race's file, so for the latest race the page takes today's
+  season standings instead, as long as only a few drivers' totals differ (a feed that hasn't
+  caught up with the race yet differs for nearly everyone).
+- **Past seasons** (checked 2026-11-07, Cup in full, O'Reilly and Truck sampled): the race list,
+  weekend feed and each race's `live_points.json` are all served back to **2017**; 2016 and
+  earlier are 403. Lap times and pit data start in **2020** (2019 and earlier are 403), and the
+  weekend feed has no `stage_results` before 2020. Old per-race standings are correct: Cup 2024's
+  leader goes 51 → 220 → 561 → 860, jumps to 2071 at the playoff reset and ends on 5040.
+  Quirks: the 2022 Cup race list leaves `winner_driver_id` null for its last 12 races, so for a
+  past season the page counts every race whose weekend has started; the owners' file is an empty
+  list for some seasons (Cup 2022 and 2025) and 403 before 2019; the manufacturers' file is 403
+  before 2019; `teams.json` (logos) only exists for 2025 on, so older seasons borrow 2025's.

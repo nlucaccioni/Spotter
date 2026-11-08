@@ -29,6 +29,10 @@ export interface RaceListing {
   trackName: string;
   /** When the weekend's first on-track session (practice, qualifying or race) starts. */
   firstSessionMs: number;
+  /** Counts for points (race_type_id 1); exhibitions like the Clash and the Duels don't. */
+  pointsRace: boolean;
+  /** The race has been run (it has a winner). */
+  finished: boolean;
 }
 
 const event = z.object({
@@ -42,6 +46,8 @@ const race = z.object({
   track_name: z.string().catch(''),
   date_scheduled: z.string().catch(''),
   schedule: z.array(z.unknown()).nullable().catch(null),
+  race_type_id: z.number().catch(1),
+  winner_driver_id: z.number().nullable().catch(null),
 });
 
 /** Parses race_list_basic.json. Races that can't be placed in time are dropped. */
@@ -54,7 +60,14 @@ export function parseRaceList(raw: unknown): RaceListing[] {
     const firstSessionMs = firstOnTrackMs(r.schedule) ?? parseUtc(r.date_scheduled);
     if (firstSessionMs === null) return [];
     return [
-      { raceId: r.race_id, name: r.race_name.trim(), trackName: r.track_name, firstSessionMs },
+      {
+        raceId: r.race_id,
+        name: r.race_name.trim(),
+        trackName: r.track_name,
+        firstSessionMs,
+        pointsRace: r.race_type_id === 1,
+        finished: r.winner_driver_id !== null,
+      },
     ];
   });
 }

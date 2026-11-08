@@ -1,32 +1,15 @@
 import { useEffect, useState } from 'react';
 import { parseRaceList, raceListUrl, SERIES_IDS, type SeriesId } from '../data/feeds/schedule.ts';
 import { mergeTeams, parseWeekendTeams, weekendFeedUrl } from '../data/feeds/weekend.ts';
-import { createBrowserFetcher } from '../data/sources/browserFetcher.ts';
+import { fetchCached } from '../data/sources/cachedFetch.ts';
 
 // Team names come from race weekend feeds (~50 KB each). Starting with the given race (or the
 // latest one under way), earlier weekends are read until every wanted driver has a team or the
 // season runs out, so part-timers get the team they last raced for. Feeds are cached for the
 // page's lifetime: a weekend's entries don't change once it's under way.
 
-const fetcher = createBrowserFetcher(20_000);
-const cache = new Map<string, Promise<unknown>>();
 const BATCH = 4;
 const EMPTY: ReadonlyMap<number, string> = new Map();
-
-function fetchCached<T>(url: string, parse: (raw: unknown) => T, fallback: T): Promise<T> {
-  let entry = cache.get(url) as Promise<T> | undefined;
-  if (!entry) {
-    entry = fetcher
-      .fetchJson(url)
-      .then(parse)
-      .catch(() => {
-        cache.delete(url); // retry on a later render
-        return fallback;
-      });
-    cache.set(url, entry);
-  }
-  return entry;
-}
 
 interface Options {
   year: number;

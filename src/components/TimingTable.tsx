@@ -116,7 +116,7 @@ export function TimingTable({
                       <th
                         key={c.id}
                         scope="col"
-                        className={`cell--${c.align} col-${c.id}`}
+                        className={`cell--${c.align} col-${c.id}${c.id === 'team' && teamDisplay === 'logo' ? ' th--centered' : ''}`}
                         aria-sort={
                           active
                             ? sort.direction === 'asc'

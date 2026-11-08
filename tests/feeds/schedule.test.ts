@@ -53,6 +53,8 @@ describe('parseRaceList', () => {
       name: 'Hollywood Casino 400',
       trackName: 'Kansas Speedway',
       firstSessionMs: at('2026-09-26T16:05:00Z'),
+      pointsRace: true,
+      finished: false,
     });
     expect(races[2]!.firstSessionMs).toBe(at('2026-10-18T14:00:00Z'));
   });

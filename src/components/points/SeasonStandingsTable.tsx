@@ -6,7 +6,7 @@ import { DriverName } from './DriverName.tsx';
 import { MfrChip } from './MfrChip.tsx';
 import { TeamName } from '../TeamName.tsx';
 import type { TeamDisplay } from '../../prefs/preferences.ts';
-import { formatBehind } from './format.ts';
+import { formatBehind, formatRate } from './format.ts';
 
 interface Props {
   standings: SeasonStanding[];
@@ -51,7 +51,12 @@ export function SeasonStandingsTable({
             <th scope="col" className="p2" title="Manufacturer">
               Mfr
             </th>
-            <th scope="col" className="p3" title="Team">
+            {/* Centered over logos, which sit centered in the column. */}
+            <th
+              scope="col"
+              className={teamDisplay === 'logo' ? 'p3 th--centered' : 'p3'}
+              title="Team"
+            >
               Team
             </th>
             <th scope="col" className="num" title="Championship points">
@@ -66,8 +71,14 @@ export function SeasonStandingsTable({
             <th scope="col" className="num" title="Race wins">
               Wins
             </th>
+            <th scope="col" className="num p4" title="Poles (fastest in qualifying)">
+              Poles
+            </th>
             <th scope="col" className="num p2" title="Top-5 finishes">
               Top 5
+            </th>
+            <th scope="col" className="num p4" title="Share of starts finished in the top 5">
+              Top 5 %
             </th>
             <th scope="col" className="num p2" title="Top-10 finishes">
               Top 10
@@ -115,7 +126,9 @@ export function SeasonStandingsTable({
                 <td className="num mono">{formatBehind(s.behindLeader, s.position === 1)}</td>
                 <td className="num mono p2">{formatBehind(s.behindNext, s.position === 1, '—')}</td>
                 <td className="num mono">{s.wins || ''}</td>
+                <td className="num mono p4">{s.poles || ''}</td>
                 <td className="num mono p2">{s.top5 || ''}</td>
+                <td className="num mono p4">{formatRate(s.top5, s.starts)}</td>
                 <td className="num mono p2">{s.top10 || ''}</td>
                 <td className="num mono p3">{s.stageWins || ''}</td>
                 <td className="num mono p3">{s.lapsLed || ''}</td>

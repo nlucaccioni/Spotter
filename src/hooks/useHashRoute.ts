@@ -1,16 +1,18 @@
 import { useSyncExternalStore } from 'react';
 
 // Hash routing (PROJECT_BRIEF.md §7: GitHub Pages has no SPA rewrites). "#/points" opens the
-// points page; anything else is the timing board.
+// points page, "#/analysis" the analysis page; anything else is the timing board.
 
-export type Route = 'timing' | 'points';
+export type Route = 'timing' | 'points' | 'analysis';
 
 export function routeFromHash(hash: string): Route {
-  return /^#\/points\b/.test(hash) ? 'points' : 'timing';
+  if (/^#\/points\b/.test(hash)) return 'points';
+  if (/^#\/analysis\b/.test(hash)) return 'analysis';
+  return 'timing';
 }
 
 export function hashForRoute(route: Route): string {
-  return route === 'points' ? '#/points' : '#/';
+  return route === 'timing' ? '#/' : `#/${route}`;
 }
 
 const subscribe = (onChange: () => void) => {
