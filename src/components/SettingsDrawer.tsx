@@ -1,16 +1,26 @@
 import { useEffect, useRef } from 'react';
+import { SERIES_IDS, SERIES_SHORT } from '../data/feeds/schedule.ts';
+import { seriesFromId } from '../data/model/lookups.ts';
 import type { Session } from '../data/model/types.ts';
 import { usePreferences } from '../hooks/usePreferences.ts';
 import { DelayStepper } from './DelayStepper.tsx';
-import { favoriteKey, toggleInList, TOGGLEABLE_COLUMNS, type Theme } from '../prefs/preferences.ts';
+import {
+  favoriteKey,
+  toggleInList,
+  TOGGLEABLE_COLUMNS,
+  type TeamDisplay,
+  type Theme,
+} from '../prefs/preferences.ts';
 
 interface Props {
   session: Session | null;
+  /** The series on screen; only its team display option is offered. */
+  seriesId: number | null;
   onClose: () => void;
 }
 
 /** Settings overlay, hidden by default (PROJECT_BRIEF.md §5.1: no side panels in portrait). */
-export function SettingsDrawer({ session, onClose }: Props) {
+export function SettingsDrawer({ session, seriesId, onClose }: Props) {
   const [prefs, update] = usePreferences();
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -22,6 +32,8 @@ export function SettingsDrawer({ session, onClose }: Props) {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
+
+  const pageSeries = SERIES_IDS.find((id) => id === seriesId) ?? null;
 
   const drivers = [...(session?.cars ?? [])].sort(
     (a, b) => Number.parseInt(a.carNumber, 10) - Number.parseInt(b.carNumber, 10),
@@ -88,9 +100,44 @@ export function SettingsDrawer({ session, onClose }: Props) {
             checked={prefs.showCarBadges}
             onChange={(showCarBadges) => update({ showCarBadges })}
           />
+          <Toggle
+            label="Manufacturer logos"
+            checked={prefs.showMfrLogos}
+            onChange={(showMfrLogos) => update({ showMfrLogos })}
+          />
           <p className="drawer__hint">
-            Loads each team&apos;s styled car number from NASCAR&apos;s servers. Off by default.
+            Loads each team&apos;s styled car number and each manufacturer&apos;s logo from
+            NASCAR&apos;s servers. Both off by default.
           </p>
+          {/* Only the series on screen: the other series' choices stay as they were. */}
+          {pageSeries !== null && (
+            <>
+              <label className="drawer__select">
+                Team display ({SERIES_SHORT[pageSeries]})
+                <select
+                  value={prefs.teamDisplay[pageSeries]}
+                  onChange={(event) =>
+                    update((p) => ({
+                      teamDisplay: {
+                        ...p.teamDisplay,
+                        [pageSeries]: event.target.value as TeamDisplay,
+                      },
+                    }))
+                  }
+                >
+                  <option value="full">Full name</option>
+                  <option value="short">Shorthand</option>
+                  <option value="logo">Team logo</option>
+                </select>
+              </label>
+              <p className="drawer__hint">
+                For the {seriesFromId(pageSeries).name} on the points page and the
+                leaderboard&apos;s Team column; each series has its own. Shorthands are the ones
+                used on broadcasts (HMS, JGR). Logos are loaded from NASCAR&apos;s servers and only
+                exist for full-time Cup organizations; other teams show their shorthand.
+              </p>
+            </>
+          )}
         </section>
 
         <section className="drawer__section">
@@ -99,17 +146,35 @@ export function SettingsDrawer({ session, onClose }: Props) {
             Columns also drop out on their own when the screen is too narrow.
           </p>
           <div className="drawer__grid">
-            {TOGGLEABLE_COLUMNS.map((column) => (
-              <Toggle
-                key={column.id}
-                label={column.title}
-                checked={!prefs.hiddenColumns.includes(column.id)}
-                onChange={() =>
-                  update((p) => ({ hiddenColumns: toggleInList(p.hiddenColumns, column.id) }))
-                }
-              />
-            ))}
+            {TOGGLEABLE_COLUMNS.flatMap((column) => {
+              const toggle = (
+                <Toggle
+                  key={column.id}
+                  label={column.title}
+                  checked={!prefs.hiddenColumns.includes(column.id)}
+                  onChange={() =>
+                    update((p) => ({ hiddenColumns: toggleInList(p.hiddenColumns, column.id) }))
+                  }
+                />
+              );
+              // Team is off by default, so it has its own switch; it sits next to Manufacturer.
+              return column.id === 'mfr'
+                ? [
+                    toggle,
+                    <Toggle
+                      key="team"
+                      label="Team"
+                      checked={prefs.showTeamColumn}
+                      onChange={(showTeamColumn) => update({ showTeamColumn })}
+                    />,
+                  ]
+                : [toggle];
+            })}
           </div>
+          <p className="drawer__hint">
+            Team is off by default and shows as chosen under Team display. When it&apos;s on it
+            ranks just after Best and ±, and it&apos;s left out when there isn&apos;t room for it.
+          </p>
         </section>
 
         <section className="drawer__section">

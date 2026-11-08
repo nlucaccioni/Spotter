@@ -693,6 +693,30 @@
   font-size: 0.85em;
 }
 
+.drawer__select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.drawer__select select {
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.drawer__select select:focus-visible {
+  outline: 2px solid var(--badge-pit);
+  outline-offset: 2px;
+}
+
 .drawer__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
@@ -783,6 +807,16 @@
   display: inline-block;
   height: 1.25em;
   width: auto;
+  vertical-align: middle;
+}
+
+/* Opt-in manufacturer logos (hotlinked from nascar.com): a fixed box the width of the pills,
+   so the column lines up whatever each logo's shape (Toyota's is square, Ford's a wide oval). */
+.mfr-logo {
+  display: inline-block;
+  width: calc((6ch + 1.2em) * 0.4092);
+  height: 0.759em;
+  object-fit: contain;
   vertical-align: middle;
 }
 
@@ -1124,6 +1158,38 @@
 
 .points-driver {
   font-weight: 600;
+}
+
+.points-team {
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+/* Team logos (hotlinked from NASCAR, light/dark versions): mostly 180×80, a couple of odd
+   shapes, so a fixed box keeps the column even. */
+/* Centered in the column (block + auto margins), while text fallbacks in the same column, such
+   as shorthands for teams without a logo, stay left-aligned. */
+.team-logo {
+  display: block;
+  width: 2.7em;
+  height: 1.215em;
+  margin-inline: auto;
+  object-fit: contain;
+  object-position: center;
+}
+
+/* With logos chosen, teams without one show their shorthand, centered like the logos. */
+.team-logo-fallback {
+  display: block;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* On the leaderboard, 15% smaller than on the points page. */
+.cell--team .team-logo {
+  width: calc(2.7em * 0.85);
+  height: calc(1.215em * 0.85);
 }
 
 .points-row--absent {

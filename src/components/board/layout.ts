@@ -10,6 +10,7 @@ export type ColumnId =
   | 'car'
   | 'driver'
   | 'mfr'
+  | 'team'
   | 'gap'
   | 'interval'
   | 'last'
@@ -46,6 +47,8 @@ export const COLUMNS: readonly ColumnDef[] = [
   { id: 'car', label: '#', title: 'Car number', priority: 1, widthEm: 2.6, align: 'right' },
   { id: 'driver', label: 'Driver', title: 'Driver', priority: 1, widthEm: 0, align: 'left' },
   { id: 'mfr', label: 'Mfr', title: 'Manufacturer', priority: 3, widthEm: 4.2, align: 'left' },
+  // Opt-in (off by default); its width depends on the team display setting (TEAM_WIDTH_EM).
+  { id: 'team', label: 'Team', title: 'Team', priority: 3, widthEm: 9, align: 'left' },
   { id: 'gap', label: 'Gap', title: 'Gap to leader', priority: 1, widthEm: 4.6, align: 'right' },
   {
     id: 'interval',
@@ -74,12 +77,20 @@ export const COLUMNS: readonly ColumnDef[] = [
 const OPTIONAL_ORDER: readonly ColumnId[] = [
   'best',
   'change',
+  // Opt-in, so when it's on it ranks high; when it doesn't fit it steps aside (OPTIONAL_SKIPPABLE).
+  'team',
   'led',
   'pits',
   'mfr',
   'laps',
   'status',
 ];
+
+/** Columns that are skipped, rather than ending the list, when they don't fit. */
+const OPTIONAL_SKIPPABLE = new Set<ColumnId>(['team']);
+
+/** Team column width (em) for each team display setting; long full names end in "…". */
+export const TEAM_WIDTH_EM = { full: 9, short: 5.5, logo: 3.6 } as const;
 
 export type NameFormat = 'full' | 'initial' | 'last';
 
@@ -106,6 +117,8 @@ export interface LayoutOptions {
   allowSplit?: boolean;
   /** Keep every column on phones and scroll sideways instead of dropping them (default true). */
   allowScrollX?: boolean;
+  /** Column widths (em) that differ from COLUMNS, e.g. the team column's. */
+  widths?: Partial<Record<ColumnId, number>>;
 }
 
 export interface BoardLayout {
@@ -136,6 +149,7 @@ export const SCROLLBAR_PX = 16;
  * @param options.hidden columns the user turned off; their width goes to the others
  * @param options.allowSplit whether a landscape screen may use two side-by-side tables
  * @param options.allowScrollX whether a phone keeps every column and scrolls sideways
+ * @param options.widths column widths that differ from COLUMNS
  */
 export function computeBoardLayout(
   width: number,
@@ -146,11 +160,16 @@ export function computeBoardLayout(
     hidden = new Set<ColumnId>(),
     allowSplit = true,
     allowScrollX = true,
+    widths = {},
   }: LayoutOptions = {},
 ): BoardLayout {
-  const single = fitTable(width, height, carCount, extraRows, hidden, true);
+  const columns = COLUMNS.map((c) => {
+    const w = widths[c.id];
+    return w === undefined ? c : { ...c, widthEm: w };
+  });
+  const single = fitTable(width, height, carCount, extraRows, hidden, true, columns);
   if (allowScrollX && width <= LIMITS.phoneWidthPx) {
-    return { ...scrollSideways(single, width, hidden), split: false };
+    return { ...scrollSideways(single, width, hidden, columns), split: false };
   }
   if (!allowSplit || width <= height || carCount < 2) {
     return { ...single, split: false, tableWidthEm: null };
@@ -159,7 +178,15 @@ export function computeBoardLayout(
   // Landscape: two tables of half the field each get taller rows (bigger text). Use them when
   // that's at least as readable and still fits the essential columns with short names.
   const halfWidth = (width - SPLIT_GAP_PX) / 2;
-  const split = fitTable(halfWidth, height, Math.ceil(carCount / 2), extraRows, hidden, false);
+  const split = fitTable(
+    halfWidth,
+    height,
+    Math.ceil(carCount / 2),
+    extraRows,
+    hidden,
+    false,
+    columns,
+  );
   const usable = split.nameFormat !== 'last' && split.fontSizePx >= single.fontSizePx;
   return usable
     ? { ...split, split: true, tableWidthEm: null }
@@ -171,8 +198,9 @@ function scrollSideways(
   fitted: Omit<BoardLayout, 'split' | 'tableWidthEm'>,
   width: number,
   hidden: ReadonlySet<ColumnId>,
+  allColumns: readonly ColumnDef[],
 ): Omit<BoardLayout, 'split'> {
-  const columns = COLUMNS.filter((c) => !hidden.has(c.id));
+  const columns = allColumns.filter((c) => !hidden.has(c.id));
   const fixedEm = columns.reduce((sum, c) => sum + c.widthEm, 0);
   const available = (fitted.scroll ? width - SCROLLBAR_PX : width) / fitted.fontSizePx;
   const driverEm = Math.max(available - fixedEm, DRIVER_WIDTH_EM.initial);
@@ -194,7 +222,10 @@ function fitTable(
   /** Keep text small enough for the priority-2 columns (off for split halves, which only need
    *  the essential columns). */
   fitPriorityTwo: boolean,
+  columns: readonly ColumnDef[],
 ): Omit<BoardLayout, 'split' | 'tableWidthEm'> {
+  const column = (id: ColumnId) => columnIn(columns, id);
+  const sumWidths = (ids: Set<ColumnId>) => [...ids].reduce((t, id) => t + column(id).widthEm, 0);
   const rows = Math.max(1, carCount) + 1 + extraRows; // + table header row
   const fitted = Math.floor(height / rows);
   const scroll = fitted < LIMITS.minRowPx;
@@ -205,7 +236,7 @@ function fitTable(
   const capNameEm = tall ? DRIVER_WIDTH_EM.last : DRIVER_WIDTH_EM.full;
   const minNameEm = tall ? DRIVER_WIDTH_EM.last : DRIVER_WIDTH_EM.initial;
   // Widest text at which the priority-1 and -2 columns still fit with names of that length.
-  const essential = COLUMNS.filter((c) => c.priority <= 2 && !hidden.has(c.id));
+  const essential = columns.filter((c) => c.priority <= 2 && !hidden.has(c.id));
   const essentialEm = essential.reduce((sum, c) => sum + c.widthEm, 0) + capNameEm;
   const widthFont = fitPriorityTwo ? Math.floor(tableWidth / essentialEm) : Infinity;
   const fontSizePx = clamp(
@@ -216,14 +247,17 @@ function fitTable(
 
   const available = tableWidth / fontSizePx;
   const chosen = new Set<ColumnId>(
-    COLUMNS.filter((c) => c.priority === 1 && !hidden.has(c.id)).map((c) => c.id),
+    columns.filter((c) => c.priority === 1 && !hidden.has(c.id)).map((c) => c.id),
   );
   let used = sumWidths(chosen) + minNameEm;
   for (const id of OPTIONAL_ORDER) {
     if (hidden.has(id)) continue;
     const w = column(id).widthEm;
     // Columns drop in strict reverse-priority order, so stop at the first that doesn't fit.
-    if (used + w > available + 1e-6) break;
+    if (used + w > available + 1e-6) {
+      if (OPTIONAL_SKIPPABLE.has(id)) continue;
+      break;
+    }
     chosen.add(id);
     used += w;
   }
@@ -240,21 +274,15 @@ function fitTable(
     rowHeightPx,
     fontSizePx,
     scroll,
-    columns: COLUMNS.filter((c) => chosen.has(c.id)),
+    columns: columns.filter((c) => chosen.has(c.id)),
     nameFormat,
   };
 }
 
-function column(id: ColumnId): ColumnDef {
-  const found = COLUMNS.find((c) => c.id === id);
+function columnIn(columns: readonly ColumnDef[], id: ColumnId): ColumnDef {
+  const found = columns.find((c) => c.id === id);
   if (!found) throw new Error(`Unknown column ${id}`);
   return found;
-}
-
-function sumWidths(ids: Set<ColumnId>): number {
-  let total = 0;
-  for (const id of ids) total += column(id).widthEm;
-  return total;
 }
 
 function clamp(value: number, min: number, max: number): number {

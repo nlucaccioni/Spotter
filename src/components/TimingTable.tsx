@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import type { CarState, Session } from '../data/model/types.ts';
-import { favoriteKey } from '../prefs/preferences.ts';
+import type { CarState, Manufacturer, Session } from '../data/model/types.ts';
+import { favoriteKey, type TeamDisplay } from '../prefs/preferences.ts';
 import { useRowReorderAnimation } from '../hooks/useRowReorderAnimation.ts';
 import { COLUMNS, SPLIT_GAP_PX, type BoardLayout } from './board/layout.ts';
 import { DEFAULT_SORT, nextSort, pinToTop, sortCars, type SortState } from './board/sort.ts';
@@ -18,6 +18,12 @@ interface Props {
   outLaps: ReadonlySet<string>;
   /** Car-number graphic lookup when the opt-in is on, otherwise null. */
   badgeFor: ((car: CarState) => string | null) | null;
+  /** Manufacturer logo lookup when the opt-in is on, otherwise null. */
+  mfrLogoFor: ((manufacturer: Manufacturer) => string | null) | null;
+  /** Team name by driver id (empty unless the Team column is on). */
+  teams: ReadonlyMap<number, string>;
+  teamDisplay: TeamDisplay;
+  teamLogoFor: ((teamName: string) => string | null) | null;
 }
 
 export function TimingTable({
@@ -30,14 +36,20 @@ export function TimingTable({
   onToggleFavorite,
   outLaps,
   badgeFor,
+  mfrLogoFor,
+  teams,
+  teamDisplay,
+  teamLogoFor,
 }: Props) {
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
 
   const { cars } = session;
   const sorted = useMemo(() => {
-    const byColumn = sortCars(cars, sort);
+    const byColumn = sortCars(cars, sort, (c) =>
+      c.driverId === null ? undefined : teams.get(c.driverId),
+    );
     return pinFavorites ? pinToTop(byColumn, (c) => favorites.has(favoriteKey(c))) : byColumn;
-  }, [cars, sort, pinFavorites, favorites]);
+  }, [cars, sort, pinFavorites, favorites, teams]);
 
   // Landscape: two side-by-side tables, first half of the order on the left.
   const groups = useMemo(() => {
@@ -149,6 +161,10 @@ export function TimingTable({
                     favorite={favorites.has(favoriteKey(car))}
                     onOutLap={outLaps.has(car.carNumber)}
                     badgeUrl={badgeFor?.(car) ?? null}
+                    mfrLogoUrl={mfrLogoFor?.(car.manufacturer) ?? null}
+                    team={car.driverId === null ? undefined : teams.get(car.driverId)}
+                    teamDisplay={teamDisplay}
+                    teamLogoFor={teamLogoFor}
                     favoriteKey={favoriteKey(car)}
                     onToggleFavorite={onToggleFavorite}
                   />

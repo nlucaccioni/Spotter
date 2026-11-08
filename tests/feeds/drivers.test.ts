@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { badgeUrlFor, isBadgeUrl, parseDrivers } from '../../src/data/feeds/drivers.ts';
+import {
+  badgeUrlFor,
+  isBadgeUrl,
+  mfrLogoCode,
+  parseDrivers,
+} from '../../src/data/feeds/drivers.ts';
 
 const CUP = 'https://cf.nascar.com/data/images/carbadges/1';
 
@@ -66,5 +71,45 @@ describe('parseDrivers / badgeUrlFor', () => {
     expect(isBadgeUrl('https://cf.nascar.com/live/feeds/live-feed.json')).toBe(false);
     expect(isBadgeUrl('javascript:alert(1)')).toBe(false);
     expect(isBadgeUrl('not a url')).toBe(false);
+  });
+});
+
+describe('manufacturer logos', () => {
+  const UP = 'https://www.nascar.com/wp-content/uploads/sites/7';
+  const CHEVY = `${UP}/2025/03/04/Chevrolet_2025-70x30.png`;
+  const OLD_CHEVY = `${UP}/2020/01/01/Chevrolet-70x30.png`;
+  const FORD = `${UP}/2026/06/10/Ford_Racing_Oval-70x26.png`;
+  const entry = (id: number, logo: string) => ({
+    Nascar_Driver_ID: id,
+    Full_Name: `Driver ${id}`,
+    Badge_Image: '',
+    Manufacturer_Small: logo,
+  });
+  const index = parseDrivers({
+    response: [
+      entry(1, CHEVY),
+      entry(2, CHEVY),
+      entry(3, OLD_CHEVY),
+      entry(4, FORD),
+      entry(5, ''),
+      entry(6, 'https://evil.example/wp-content/uploads/sites/7/2025/03/04/Toyota-35x35.png'),
+    ],
+  });
+
+  it('keeps the most-linked logo per make, even for drivers without a badge', () => {
+    expect(index.mfrLogos.get('Chv')).toBe(CHEVY);
+    expect(index.mfrLogos.get('Frd')).toBe(FORD);
+    expect(index.mfrLogos.has('Tyt')).toBe(false);
+  });
+
+  it('only accepts nascar.com upload PNGs named for a known make', () => {
+    expect(mfrLogoCode(`${UP}/2020/04/06/Toyota-35x35.png`)).toBe('Tyt');
+    expect(mfrLogoCode(`${UP}/2026/01/12/Ram-70x24.png`)).toBe('Ram');
+    expect(mfrLogoCode(`${UP}/2026/01/12/Honda-70x24.png`)).toBeNull();
+    expect(
+      mfrLogoCode(`http://www.nascar.com/wp-content/uploads/sites/7/2026/01/12/Ram-70x24.png`),
+    ).toBeNull();
+    expect(mfrLogoCode('https://www.nascar.com/drivers/ram.png')).toBeNull();
+    expect(mfrLogoCode('not a url')).toBeNull();
   });
 });

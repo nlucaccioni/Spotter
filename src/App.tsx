@@ -42,6 +42,9 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
   const [eventLogOpen, setEventLogOpen] = useState(false);
+  // The series on screen: the board's session, or whichever the points page is showing.
+  const [pointsSeries, setPointsSeries] = useState<number | null>(null);
+  const pageSeries = route === 'points' ? pointsSeries : (session?.series.id ?? null);
   const closeEventLog = useCallback(() => setEventLogOpen(false), []);
 
   // Keep the screen awake only while a session is actually running.
@@ -52,7 +55,11 @@ export default function App() {
     <div className={`app${idle ? ' app--idle' : ''}`}>
       {route === 'points' ? (
         <ErrorBoundary>
-          <PointsPage session={latestSession} livePointsUrl={source.pointsUrl} />
+          <PointsPage
+            session={latestSession}
+            livePointsUrl={source.pointsUrl}
+            onSeriesShown={setPointsSeries}
+          />
         </ErrorBoundary>
       ) : session ? (
         <>
@@ -112,7 +119,9 @@ export default function App() {
           onClose={closeEventLog}
         />
       )}
-      {settingsOpen && <SettingsDrawer session={session} onClose={closeSettings} />}
+      {settingsOpen && (
+        <SettingsDrawer session={session} seriesId={pageSeries} onClose={closeSettings} />
+      )}
     </div>
   );
 }

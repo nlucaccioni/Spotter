@@ -21,6 +21,20 @@ describe('nextSort', () => {
 });
 
 describe('sortCars', () => {
+  it('sorts by team name when given the lookup, unknown teams last', () => {
+    const teams = new Map(
+      cars.slice(0, 3).map((c, i) => [c.carNumber, ['Zeta', 'alpha', 'Mid'][i]!]),
+    );
+    const sorted = sortCars(cars, { column: 'team', direction: 'asc' }, (c) =>
+      teams.get(c.carNumber),
+    );
+    expect(numbers(sorted).slice(0, 3)).toEqual([
+      cars[1]!.carNumber,
+      cars[2]!.carNumber,
+      cars[0]!.carNumber,
+    ]);
+  });
+
   it('defaults to running order and returns a copy', () => {
     const sorted = sortCars(cars, DEFAULT_SORT);
     expect(sorted.map((c) => c.position)).toEqual(cars.map((c) => c.position));

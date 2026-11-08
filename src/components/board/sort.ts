@@ -23,7 +23,10 @@ export function nextSort(current: SortState, column: ColumnId): SortState {
 
 type SortValue = number | string | null;
 
-function sortValue(car: CarState, column: ColumnId): SortValue {
+/** Team name by car, for sorting the team column; the board's team lookup. */
+export type TeamOf = (car: CarState) => string | undefined;
+
+function sortValue(car: CarState, column: ColumnId, teamOf?: TeamOf): SortValue {
   switch (column) {
     case 'pos':
     case 'gap':
@@ -38,6 +41,8 @@ function sortValue(car: CarState, column: ColumnId): SortValue {
       return car.name.last.toLowerCase();
     case 'mfr':
       return car.manufacturer.name;
+    case 'team':
+      return teamOf?.(car)?.toLowerCase() ?? null;
     case 'interval':
       return gapRank(car.interval);
     case 'last':
@@ -77,11 +82,11 @@ export function pinToTop(
 }
 
 /** Returns a sorted copy. Missing values always sort last; ties fall back to position. */
-export function sortCars(cars: readonly CarState[], sort: SortState): CarState[] {
+export function sortCars(cars: readonly CarState[], sort: SortState, teamOf?: TeamOf): CarState[] {
   const sign = sort.direction === 'asc' ? 1 : -1;
   return [...cars].sort((a, b) => {
-    const va = sortValue(a, sort.column);
-    const vb = sortValue(b, sort.column);
+    const va = sortValue(a, sort.column, teamOf);
+    const vb = sortValue(b, sort.column, teamOf);
     if (va !== vb) {
       if (va === null) return 1;
       if (vb === null) return -1;

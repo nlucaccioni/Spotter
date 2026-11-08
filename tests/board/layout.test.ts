@@ -6,11 +6,14 @@ import {
   type ColumnId,
 } from '../../src/components/board/layout.ts';
 
-// Single table that drops columns, so column priority can be checked across any width.
+// Single table that drops columns, so column priority can be checked across any width. The
+// Team column is off by default (opt-in), as on the board.
 const ids = (width: number, height: number, cars = 40) =>
-  computeBoardLayout(width, height, cars, { allowSplit: false, allowScrollX: false }).columns.map(
-    (c) => c.id,
-  );
+  computeBoardLayout(width, height, cars, {
+    allowSplit: false,
+    allowScrollX: false,
+    hidden: new Set(['team']),
+  }).columns.map((c) => c.id);
 
 const ALWAYS = ['pos', 'car', 'driver', 'gap', 'interval', 'last'];
 
@@ -81,7 +84,8 @@ describe('computeBoardLayout — column priority', () => {
   });
 
   it('stops growing the text once the priority-2 columns would no longer fit', () => {
-    const layout = computeBoardLayout(720, 1400, 40, { allowSplit: false });
+    const teamOff = new Set<ColumnId>(['team']);
+    const layout = computeBoardLayout(720, 1400, 40, { allowSplit: false, hidden: teamOff });
     expect(layout.fontSizePx).toBeLessThan(Math.round(layout.rowHeightPx * LIMITS.fontToRow));
     for (const id of ['best', 'change', 'led', 'pits']) {
       expect(layout.columns.map((c) => c.id)).toContain(id);
@@ -89,14 +93,17 @@ describe('computeBoardLayout — column priority', () => {
   });
 
   it('lets the text grow again when columns are hidden', () => {
-    const hidden = new Set<ColumnId>(['best', 'change', 'led', 'pits']);
-    const all = computeBoardLayout(720, 1400, 40, { allowSplit: false });
+    const hidden = new Set<ColumnId>(['team', 'best', 'change', 'led', 'pits']);
+    const all = computeBoardLayout(720, 1400, 40, {
+      allowSplit: false,
+      hidden: new Set<ColumnId>(['team']),
+    });
     const fewer = computeBoardLayout(720, 1400, 40, { allowSplit: false, hidden });
     expect(fewer.fontSizePx).toBeGreaterThan(all.fontSizePx);
   });
 
   it('shows every column on a wide screen', () => {
-    expect(ids(1440, 2400)).toHaveLength(COLUMNS.length);
+    expect(ids(1440, 2400)).toHaveLength(COLUMNS.length - 1); // all but the opt-in Team
   });
 
   it('keeps columns in display order', () => {
@@ -108,7 +115,8 @@ describe('computeBoardLayout — column priority', () => {
 
 describe('computeBoardLayout — driver name length', () => {
   it('shortens names as the driver column narrows', () => {
-    expect(computeBoardLayout(1440, 2400, 36).nameFormat).toBe('full');
+    const teamOff = { hidden: new Set<ColumnId>(['team']) };
+    expect(computeBoardLayout(1440, 2400, 36, teamOff).nameFormat).toBe('full');
     expect(computeBoardLayout(360, 600, 40).nameFormat).not.toBe('full');
   });
 });
@@ -150,9 +158,11 @@ describe('computeBoardLayout — hidden columns', () => {
 
   it('gives the freed width to lower-priority columns', () => {
     const width = 864;
-    const before = computeBoardLayout(width, 1400, 36).columns.map((c) => c.id);
+    const before = computeBoardLayout(width, 1400, 36, {
+      hidden: new Set<ColumnId>(['team']),
+    }).columns.map((c) => c.id);
     const after = computeBoardLayout(width, 1400, 36, {
-      hidden: new Set<ColumnId>(['change', 'led']),
+      hidden: new Set<ColumnId>(['team', 'change', 'led']),
     }).columns.map((c) => c.id);
     expect(before).not.toContain('status');
     expect(after.length).toBeGreaterThanOrEqual(before.length - 2);
@@ -215,5 +225,38 @@ describe('computeBoardLayout — phones', () => {
   it('only applies at phone widths', () => {
     expect(computeBoardLayout(720, 1150, 40).tableWidthEm).toBeNull();
     expect(computeBoardLayout(LIMITS.phoneWidthPx + 1, 900, 40).tableWidthEm).toBeNull();
+  });
+});
+
+describe('computeBoardLayout — team column', () => {
+  const at = (width: number, widths: Partial<Record<ColumnId, number>> = {}) =>
+    computeBoardLayout(width, 1700, 40, { allowSplit: false, allowScrollX: false, widths }).columns;
+
+  it('ranks right after Best and ±, and steps aside without dropping later columns', () => {
+    for (let width = 360; width <= 2000; width += 20) {
+      const shown = at(width).map((c) => c.id);
+      const without = computeBoardLayout(width, 1700, 40, {
+        allowSplit: false,
+        allowScrollX: false,
+        hidden: new Set(['team']),
+      }).columns.map((c) => c.id);
+      if (shown.includes('team')) {
+        expect(shown).toEqual(expect.arrayContaining(['best', 'change']));
+      } else {
+        // Too wide to fit: the board is exactly as it would be with the column off.
+        expect(shown).toEqual(without);
+      }
+    }
+  });
+
+  it('uses the width it is given, so a narrow (shorthand or logo) column fits sooner', () => {
+    const fitsFrom = (w: number) => {
+      for (let width = 360; width <= 3000; width += 10) {
+        if (at(width, { team: w }).some((c) => c.id === 'team')) return width;
+      }
+      return Infinity;
+    };
+    expect(fitsFrom(3.6)).toBeLessThan(fitsFrom(11));
+    expect(at(3000, { team: 3.6 }).find((c) => c.id === 'team')?.widthEm).toBe(3.6);
   });
 });

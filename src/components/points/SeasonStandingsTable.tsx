@@ -1,18 +1,36 @@
 import type { SeasonStanding } from '../../data/feeds/points.ts';
+import type { Manufacturer } from '../../data/model/types.ts';
 import type { BadgeCar } from '../../hooks/useCarBadges.ts';
 import { CarNumber } from '../CarNumber.tsx';
 import { DriverName } from './DriverName.tsx';
 import { MfrChip } from './MfrChip.tsx';
+import { TeamName } from '../TeamName.tsx';
+import type { TeamDisplay } from '../../prefs/preferences.ts';
 import { formatBehind } from './format.ts';
 
 interface Props {
   standings: SeasonStanding[];
   favorites: ReadonlySet<string>;
+  /** Team name by driver id, from race weekend feeds; filled in as they arrive. */
+  teams: ReadonlyMap<number, string>;
+  /** How teams are shown (settings), and the logo lookup when logos are chosen. */
+  teamDisplay: TeamDisplay;
+  teamLogoFor: ((teamName: string) => string | null) | null;
   /** Car-number graphic lookup when the opt-in is on, otherwise null. */
   badgeFor: ((car: BadgeCar) => string | null) | null;
+  /** Manufacturer logo lookup when the opt-in is on, otherwise null. */
+  mfrLogoFor: ((manufacturer: Manufacturer) => string | null) | null;
 }
 
-export function SeasonStandingsTable({ standings, favorites, badgeFor }: Props) {
+export function SeasonStandingsTable({
+  standings,
+  favorites,
+  teams,
+  teamDisplay,
+  teamLogoFor,
+  badgeFor,
+  mfrLogoFor,
+}: Props) {
   // The feed lists everyone with a license; show drivers who have raced.
   const rows = standings.filter((s) => s.points > 0 || s.starts > 0);
   return (
@@ -32,6 +50,9 @@ export function SeasonStandingsTable({ standings, favorites, badgeFor }: Props) 
             </th>
             <th scope="col" className="p2" title="Manufacturer">
               Mfr
+            </th>
+            <th scope="col" className="p3" title="Team">
+              Team
             </th>
             <th scope="col" className="num" title="Championship points">
               Points
@@ -81,7 +102,14 @@ export function SeasonStandingsTable({ standings, favorites, badgeFor }: Props) 
                   <DriverName name={s.name} />
                 </td>
                 <td className="p2">
-                  <MfrChip manufacturer={s.manufacturer} />
+                  <MfrChip manufacturer={s.manufacturer} logoFor={mfrLogoFor} />
+                </td>
+                <td className="p3 points-team">
+                  <TeamName
+                    name={s.driverId === null ? undefined : teams.get(s.driverId)}
+                    display={teamDisplay}
+                    logoFor={teamLogoFor}
+                  />
                 </td>
                 <td className="num mono strong">{s.points}</td>
                 <td className="num mono">{formatBehind(s.behindLeader, s.position === 1)}</td>

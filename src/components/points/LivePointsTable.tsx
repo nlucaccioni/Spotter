@@ -6,6 +6,8 @@ import { BADGE_LABELS, formatChange } from '../board/format.ts';
 import { CarNumber } from '../CarNumber.tsx';
 import { DriverName } from './DriverName.tsx';
 import { MfrChip } from './MfrChip.tsx';
+import { TeamName } from '../TeamName.tsx';
+import type { TeamDisplay } from '../../prefs/preferences.ts';
 import { formatBehind } from './format.ts';
 
 interface Props {
@@ -15,11 +17,28 @@ interface Props {
   favorites: ReadonlySet<string>;
   /** By driver id, from the race on the board (the points feed has no manufacturer). */
   manufacturers: ReadonlyMap<number, Manufacturer>;
+  /** Team name by driver id, from race weekend feeds; filled in as they arrive. */
+  teams: ReadonlyMap<number, string>;
+  /** How teams are shown (settings), and the logo lookup when logos are chosen. */
+  teamDisplay: TeamDisplay;
+  teamLogoFor: ((teamName: string) => string | null) | null;
   /** Car-number graphic lookup when the opt-in is on, otherwise null. */
   badgeFor: ((car: BadgeCar) => string | null) | null;
+  /** Manufacturer logo lookup when the opt-in is on, otherwise null. */
+  mfrLogoFor: ((manufacturer: Manufacturer) => string | null) | null;
 }
 
-export function LivePointsTable({ entries, inRace, favorites, manufacturers, badgeFor }: Props) {
+export function LivePointsTable({
+  entries,
+  inRace,
+  favorites,
+  manufacturers,
+  teams,
+  teamDisplay,
+  teamLogoFor,
+  badgeFor,
+  mfrLogoFor,
+}: Props) {
   const moves = useMemo(() => standingsMoves(entries), [entries]);
   const moveOf = new Map(entries.map((e, i) => [e, moves[i]!]));
   // Drivers with points or in today's race; the feed also lists everyone with a license.
@@ -52,6 +71,9 @@ export function LivePointsTable({ entries, inRace, favorites, manufacturers, bad
             </th>
             <th scope="col" className="p3" title="Manufacturer">
               Mfr
+            </th>
+            <th scope="col" className="p3" title="Team">
+              Team
             </th>
             <th scope="col" className="num" title="Championship points">
               Points
@@ -122,6 +144,14 @@ export function LivePointsTable({ entries, inRace, favorites, manufacturers, bad
                 <td className="p3">
                   <MfrChip
                     manufacturer={e.driverId === null ? undefined : manufacturers.get(e.driverId)}
+                    logoFor={mfrLogoFor}
+                  />
+                </td>
+                <td className="p3 points-team">
+                  <TeamName
+                    name={e.driverId === null ? undefined : teams.get(e.driverId)}
+                    display={teamDisplay}
+                    logoFor={teamLogoFor}
                   />
                 </td>
                 <td className="num mono strong">{e.points}</td>

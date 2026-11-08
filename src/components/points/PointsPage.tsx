@@ -1,11 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { parseLivePoints, parseSeasonPoints, seasonPointsUrl } from '../../data/feeds/points.ts';
 import { SERIES_IDS, SERIES_SHORT } from '../../data/feeds/schedule.ts';
 import { seriesFromId } from '../../data/model/lookups.ts';
 import type { Manufacturer, Session } from '../../data/model/types.ts';
 import { useCarBadges } from '../../hooks/useCarBadges.ts';
+import { useMfrLogos } from '../../hooks/useMfrLogos.ts';
+import { useTeamLogos } from '../../hooks/useTeamLogos.ts';
+import { useTeamNames } from '../../hooks/useTeamNames.ts';
 import { usePolledFeed, type PolledFeed } from '../../hooks/usePolledFeed.ts';
 import { usePreferences } from '../../hooks/usePreferences.ts';
+import { teamDisplayFor } from '../../prefs/preferences.ts';
 import { LivePointsTable } from './LivePointsTable.tsx';
 import { SeasonStandingsTable } from './SeasonStandingsTable.tsx';
 
@@ -17,10 +21,12 @@ interface Props {
   session: Session | null;
   /** Live points for the race the board is following; null while that's being worked out. */
   livePointsUrl: string | null;
+  /** Told which series the page is showing, so settings can offer that series' options. */
+  onSeriesShown?: (seriesId: number) => void;
 }
 
 /** Live race points and season standings (PROJECT_BRIEF.md "Later milestones"). */
-export function PointsPage({ session, livePointsUrl }: Props) {
+export function PointsPage({ session, livePointsUrl, onSeriesShown }: Props) {
   const [prefs] = usePreferences();
   const [tab, setTab] = useState<Tab>('live');
   const liveSeries = session?.series.id ?? 1;
@@ -52,6 +58,30 @@ export function PointsPage({ session, livePointsUrl }: Props) {
     () => new Set(session?.cars.flatMap((c) => (c.driverId === null ? [] : [c.driverId]))),
     [session],
   );
+  const mfrLogoFor = useMfrLogos(prefs.showMfrLogos);
+
+  // Drivers the tables show (see their row filters), so the team search knows when to stop.
+  const shownDriverIds = useMemo(() => {
+    const rows =
+      tab === 'live'
+        ? (live.data ?? []).filter(
+            (e) => e.points > 0 || (e.driverId !== null && inRace.has(e.driverId)),
+          )
+        : (season.data ?? []).filter((s) => s.points > 0 || s.starts > 0);
+    return rows.flatMap((r) => (r.driverId === null ? [] : [r.driverId]));
+  }, [tab, live.data, season.data, inRace]);
+  const teams = useTeamNames({
+    year,
+    seriesId: tab === 'live' ? liveSeries : seasonSeries,
+    // The live tab starts from the race on the board; the season tab from the latest weekend.
+    raceId: tab === 'live' ? (session?.raceId ?? null) : null,
+    driverIds: shownDriverIds,
+    enabled: (tab === 'live' ? live.data : season.data) !== null,
+  });
+  const shownSeries = tab === 'live' ? liveSeries : seasonSeries;
+  useEffect(() => onSeriesShown?.(shownSeries), [onSeriesShown, shownSeries]);
+  const teamDisplay = teamDisplayFor(prefs, shownSeries);
+  const teamLogoFor = useTeamLogos(teamDisplay === 'logo', year, prefs.theme);
 
   const feed = tab === 'live' ? live : season;
   const subtitle =
@@ -99,11 +129,23 @@ export function PointsPage({ session, livePointsUrl }: Props) {
             inRace={inRace}
             favorites={favorites}
             manufacturers={manufacturers}
+            teams={teams}
+            teamDisplay={teamDisplay}
+            teamLogoFor={teamLogoFor}
             badgeFor={badgeFor}
+            mfrLogoFor={mfrLogoFor}
           />
         )}
         {tab === 'season' && season.data && (
-          <SeasonStandingsTable standings={season.data} favorites={favorites} badgeFor={badgeFor} />
+          <SeasonStandingsTable
+            standings={season.data}
+            favorites={favorites}
+            teams={teams}
+            teamDisplay={teamDisplay}
+            teamLogoFor={teamLogoFor}
+            badgeFor={badgeFor}
+            mfrLogoFor={mfrLogoFor}
+          />
         )}
       </div>
     </main>

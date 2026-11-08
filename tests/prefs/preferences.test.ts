@@ -5,6 +5,7 @@ import {
   favoriteKey,
   parseDelayInput,
   parsePreferences,
+  teamDisplayFor,
   toggleInList,
   TOGGLEABLE_COLUMNS,
 } from '../../src/prefs/preferences.ts';
@@ -34,6 +35,9 @@ describe('parsePreferences', () => {
       favorites: ['id:4030', 'name:Kyle Larson'],
       pinFavorites: true,
       showCarBadges: false,
+      showMfrLogos: false,
+      showTeamColumn: false,
+      teamDisplay: { 1: 'full', 2: 'full', 3: 'full' },
       delaySeconds: 0,
       liveSeries: 'auto',
     });
@@ -146,5 +150,23 @@ describe('TV delay values', () => {
     expect(series('auto')).toBe('auto');
     expect(series(4)).toBe('auto');
     expect(series('cup')).toBe('auto');
+  });
+});
+
+describe('team display per series', () => {
+  it('reads per-series values, defaulting the rest to full names', () => {
+    const prefs = parsePreferences(
+      JSON.stringify({ teamDisplay: { 1: 'logo', 2: 'short', 3: 'x' } }),
+    );
+    expect(prefs.teamDisplay).toEqual({ 1: 'logo', 2: 'short', 3: 'full' });
+    expect(teamDisplayFor(prefs, 1)).toBe('logo');
+    expect(teamDisplayFor(prefs, 2)).toBe('short');
+    expect(teamDisplayFor(prefs, null)).toBe('full');
+    expect(teamDisplayFor(prefs, 99)).toBe('full');
+  });
+
+  it('applies an older single setting to every series', () => {
+    const prefs = parsePreferences(JSON.stringify({ teamDisplay: 'logo' }));
+    expect(prefs.teamDisplay).toEqual({ 1: 'logo', 2: 'logo', 3: 'logo' });
   });
 });

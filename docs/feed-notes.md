@@ -205,3 +205,26 @@ Note, NoteID, DriverIDs }] } }`. Written commentary, current to the
 - **`is_on_dvp` stays true after retiring:** #23, #24 and #48 kept `is_on_dvp: true` once they were
   `status: 3`. At Kansas, #4 retired (likely mechanical) with `is_on_dvp: false`. The board hides
   the DVP tag once a car is out.
+
+### 2026-11-07 — Manufacturer logos and team names
+
+- **Logos:** `drivers.json` links each driver to `Manufacturer` (large) and `Manufacturer_Small`
+  logo images on `www.nascar.com/wp-content/uploads/sites/7/<date>/...png`. Small sizes seen:
+  Chevrolet 70×30, Ford 70×26, Toyota 35×35 (square), Ram 70×24. The file names carry a date and
+  change when NASCAR updates a logo, so the app reads the URLs from the list (the most-linked
+  one per make) instead of hard-coding them. They return 403 to plain `curl` but load in a browser.
+- **`Team` in `drivers.json` isn't usable:** of 336 Cup entries most are bare numbers (`"2215"`),
+  23 are blank, and some names are stale ("Stewart-Haas Racing") or have trailing spaces.
+- **Team names come from `cacher/{year}/{series}/{race_id}/weekend-feed.json`** (~50 KB):
+  `weekend_race[0].results[]` has `driver_id`, `team_id` and `team_name` for every entered car.
+  It's filled from the entry list before the race (Cup championship 5601 had all 40 cars the day
+  before), then becomes the results. One weekend covered 39 of the 53 Cup drivers in the
+  standings, so the season tab reads earlier weekends until every driver has a team.
+- **Team logos: `cacher/{year}/teams.json`** (~4 KB; 2026 and 2025 exist, 2024 is 403) lists the
+  15 full-time Cup teams as `{ id, name, mfr, imageUrl, linkUrl }`. `imageUrl` has a literal
+  `{ui_theme}` placeholder: `cf.nascar.com/data/images/teams/<Name>_{light|dark}.png`, mostly
+  180×80 (Spire and Trackhouse are larger and a different shape). The dark version is white on
+  transparent. Its ids don't match the weekend feed's `team_id` (Hendrick is 4 here, 1717 there),
+  and names differ slightly ("Trackhouse" vs "Trackhouse Racing"), so the app matches on the
+  name, ignoring case, punctuation and a trailing "Racing". No O'Reilly or Truck teams, and no
+  short names: the shorthands (HMS, JGR…) are kept in `src/data/feeds/teams.ts`.

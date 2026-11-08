@@ -2,6 +2,9 @@ import { memo, useEffect, useRef } from 'react';
 import { formatGap } from '../data/model/gaps.ts';
 import type { CarState } from '../data/model/types.ts';
 import { CarNumber } from './CarNumber.tsx';
+import { MfrLogo } from './MfrLogo.tsx';
+import { TeamName } from './TeamName.tsx';
+import type { TeamDisplay } from '../prefs/preferences.ts';
 import {
   BADGE_LABELS,
   formatChange,
@@ -33,6 +36,12 @@ interface Props {
   onOutLap: boolean;
   /** Opt-in car-number graphic; the plain number is shown when null or if it fails to load. */
   badgeUrl: string | null;
+  /** Opt-in manufacturer logo; the text pill is shown when null or if it fails to load. */
+  mfrLogoUrl: string | null;
+  /** Team name (opt-in column), how to show it, and the logo lookup when logos are chosen. */
+  team: string | undefined;
+  teamDisplay: TeamDisplay;
+  teamLogoFor: ((teamName: string) => string | null) | null;
   /** Called with the driver's favorite key on double-click. */
   onToggleFavorite: (key: string) => void;
   favoriteKey: string;
@@ -49,6 +58,10 @@ export const TimingRow = memo(function TimingRow({
   favorite,
   onOutLap,
   badgeUrl,
+  mfrLogoUrl,
+  team,
+  teamDisplay,
+  teamLogoFor,
   onToggleFavorite,
   favoriteKey,
 }: Props) {
@@ -86,6 +99,10 @@ export const TimingRow = memo(function TimingRow({
           sessionFinished={sessionFinished}
           onOutLap={onOutLap}
           badgeUrl={badgeUrl}
+          mfrLogoUrl={mfrLogoUrl}
+          team={team}
+          teamDisplay={teamDisplay}
+          teamLogoFor={teamLogoFor}
         />
       ))}
     </tr>
@@ -100,9 +117,22 @@ function Cell({
   sessionFinished,
   onOutLap,
   badgeUrl,
+  mfrLogoUrl,
+  team,
+  teamDisplay,
+  teamLogoFor,
 }: Pick<
   Props,
-  'car' | 'nameFormat' | 'sessionBest' | 'sessionFinished' | 'onOutLap' | 'badgeUrl'
+  | 'car'
+  | 'nameFormat'
+  | 'sessionBest'
+  | 'sessionFinished'
+  | 'onOutLap'
+  | 'badgeUrl'
+  | 'mfrLogoUrl'
+  | 'team'
+  | 'teamDisplay'
+  | 'teamLogoFor'
 > & {
   column: ColumnDef;
 }) {
@@ -149,11 +179,20 @@ function Cell({
     case 'mfr':
       return (
         <td className={align} title={car.manufacturer.name}>
-          <span
-            className={`mfr-chip mfr-chip--${car.manufacturer.code.toLowerCase() || 'unknown'}`}
-          >
-            {formatManufacturer(car.manufacturer.name)}
-          </span>
+          <MfrLogo manufacturer={car.manufacturer} logoUrl={mfrLogoUrl}>
+            <span
+              className={`mfr-chip mfr-chip--${car.manufacturer.code.toLowerCase() || 'unknown'}`}
+            >
+              {formatManufacturer(car.manufacturer.name)}
+            </span>
+          </MfrLogo>
+        </td>
+      );
+
+    case 'team':
+      return (
+        <td className={`${align} cell--team`} title={team}>
+          <TeamName name={team} display={teamDisplay} logoFor={teamLogoFor} />
         </td>
       );
 
