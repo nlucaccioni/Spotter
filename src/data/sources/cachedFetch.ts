@@ -3,11 +3,14 @@ import { createBrowserFetcher } from './browserFetcher.ts';
 // One page-lifetime cache for NASCAR's per-race files (weekend feeds, lap times, pit data,
 // schedules). They don't change once a race is over, and several pages read the same ones,
 // sometimes with different parsers (team names and race results both come from the weekend
-// feed), so the body is fetched once per URL and each parser's result is kept separately.
+// feed), so the body is fetched once per URL and each parser's result is kept separately. A race
+// in progress is the exception: fetchFresh re-reads its files.
 
 const fetcher = createBrowserFetcher(20_000);
 const bodies = new Map<string, Promise<unknown>>();
 const parsed = new WeakMap<(raw: unknown) => unknown, Map<string, Promise<unknown>>>();
+/** Bumped by fetchFresh, so every parser's cached result for the URL is replaced. */
+const generations = new Map<string, number>();
 
 function fetchBody(url: string): Promise<unknown> {
   let body = bodies.get(url);
@@ -27,14 +30,22 @@ export function fetchCachedStrict<T>(url: string, parse: (raw: unknown) => T): P
     byUrl = new Map();
     parsed.set(parse, byUrl);
   }
-  let entry = byUrl.get(url) as Promise<T> | undefined;
+  const key = `${generations.get(url) ?? 0}:${url}`;
+  let entry = byUrl.get(key) as Promise<T> | undefined;
   if (!entry) {
     const store = byUrl;
     entry = fetchBody(url).then(parse);
-    entry.catch(() => store.delete(url));
-    store.set(url, entry);
+    entry.catch(() => store.delete(key));
+    store.set(key, entry);
   }
   return entry;
+}
+
+/** Fetches the URL again (for a race in progress) and caches the new result for later calls. */
+export function fetchFresh<T>(url: string, parse: (raw: unknown) => T): Promise<T> {
+  bodies.delete(url);
+  generations.set(url, (generations.get(url) ?? 0) + 1);
+  return fetchCachedStrict(url, parse);
 }
 
 /** Like fetchCachedStrict, but a failure gives `fallback`. */

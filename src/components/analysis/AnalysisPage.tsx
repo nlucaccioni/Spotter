@@ -26,6 +26,8 @@ const FIRST_SEASON = 2017;
 const FIRST_LAP_DATA_SEASON = 2020;
 /** Oldest season with NASCAR's team logo list; earlier seasons borrow it. */
 const FIRST_TEAM_LOGO_SEASON = 2025;
+/** run_type of a race session (1 practice, 2 qualifying). */
+const RACE_RUN = 3;
 
 interface Props {
   /** The newest live session, if any: picks the starting series and year. */
@@ -55,8 +57,17 @@ export function AnalysisPage({ session, onSeriesShown }: Props) {
   const thisSeason = year === liveYear ? 'this season' : `in ${year}`;
   useEffect(() => onSeriesShown?.(seriesId), [onSeriesShown, seriesId]);
 
-  const races = useFinishedRaces(year, seriesId);
-  const pointsRaces = useMemo(() => races.data?.filter((r) => r.pointsRace) ?? null, [races.data]);
+  // The race on track now (or just finished, until its official results are out).
+  const liveRaceId =
+    session?.runType === RACE_RUN && session.series.id === seriesId && year === liveYear
+      ? session.raceId
+      : null;
+  const races = useFinishedRaces(year, seriesId, liveRaceId);
+  // The season view sticks to official results, so it leaves out the race in progress.
+  const pointsRaces = useMemo(
+    () => races.data?.filter((r) => r.pointsRace && r.raceId !== liveRaceId) ?? null,
+    [races.data, liveRaceId],
+  );
   const groups = useGroupStandings(year, seriesId);
   const season = useSeasonResults(year, seriesId, view === 'season' ? pointsRaces : null);
 
@@ -66,7 +77,12 @@ export function AnalysisPage({ session, onSeriesShown }: Props) {
   const seasonKey = `${year}/${seriesId}`;
   const raceId =
     (pickedRace?.season === seasonKey ? pickedRace.raceId : null) ?? raceOptions[0]?.raceId ?? null;
-  const detail = useRaceDetail(year, seriesId, view === 'race' ? raceId : null);
+  const detail = useRaceDetail(
+    year,
+    seriesId,
+    view === 'race' ? raceId : null,
+    raceId !== null && raceId === liveRaceId,
+  );
 
   const favorites = useMemo(() => new Set(prefs.favorites), [prefs.favorites]);
   const teamDisplay = teamDisplayFor(prefs, seriesId);
@@ -100,6 +116,7 @@ export function AnalysisPage({ session, onSeriesShown }: Props) {
                 {raceOptions.map((r) => (
                   <option key={r.raceId} value={r.raceId}>
                     {r.trackName ? `${r.trackName} · ${r.name}` : r.name}
+                    {r.raceId === liveRaceId ? ' (live)' : ''}
                   </option>
                 ))}
               </select>
@@ -126,6 +143,7 @@ export function AnalysisPage({ session, onSeriesShown }: Props) {
             options={SERIES_IDS.map((id) => [id, SERIES_SHORT[id]] as const)}
             value={seriesId}
             onChange={setPickedSeries}
+            className="analysis__series"
           />
           <Segmented
             label="View"
@@ -135,6 +153,7 @@ export function AnalysisPage({ session, onSeriesShown }: Props) {
             ]}
             value={view}
             onChange={setView}
+            className="analysis__view"
           />
         </div>
       </header>

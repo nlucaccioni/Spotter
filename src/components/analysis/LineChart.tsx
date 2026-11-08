@@ -1,4 +1,12 @@
-import { useId, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react';
 import { useElementSize } from '../../hooks/useElementSize.ts';
 import {
   CHART_MARGIN,
@@ -55,8 +63,8 @@ interface Props {
   /** The x range shown (zoomed in); the whole chart when left out. */
   view?: XView | null | undefined;
   /**
-   * Lets the reader zoom: drag across the plot with a mouse or pen, or pinch and pan on a touch
-   * screen. Null = back to the whole chart (also on a double click).
+   * Lets the reader zoom: drag across the plot with a mouse or pen, or pinch and pan with two
+   * fingers on a touch screen. Null = back to the whole chart (also on a double click).
    */
   onViewChange?: ((view: XView | null) => void) | undefined;
   /**
@@ -75,6 +83,10 @@ interface Props {
 const HOT_DISTANCE = 14;
 /** Movement (px) still counted as a click or tap rather than a drag. */
 const CLICK_SLOP = 5;
+/** On touch, holding this long (ms) without moving starts scrubbing; moving sooner scrolls. */
+const HOLD_MS = 300;
+/** How far (px) a finger can drift during the hold and still start scrubbing. */
+const HOLD_SLOP = 10;
 
 /** Rows per tooltip column, and the most rows shown when it lists the whole field. */
 const TOOLTIP_COLUMN_ROWS = 15;
@@ -88,7 +100,7 @@ interface Gesture {
   view: XView;
   /** The plot's left edge on screen. */
   left: number;
-  /** Touch x positions when the gesture started (one finger pans, two pinch). */
+  /** Touch x positions when the gesture started (two fingers pinch and pan). */
   xs: number[];
 }
 
@@ -135,6 +147,25 @@ export function LineChart({
   const pressedAt = useRef<{ x: number; y: number } | null>(null);
   /** On touch, the line tapped once: a second tap on it highlights it. */
   const tapped = useRef<string | null>(null);
+  // Touch scrubbing: a finger held still takes over the chart (the tooltip and the line nearest
+  // the finger follow it); a finger that moves first is left to scroll the page.
+  // State, not a ref: the svg only appears once the chart has a width.
+  const [svg, setSvg] = useState<SVGSVGElement | null>(null);
+  const scrubbing = useRef(false);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const cancelHold = () => clearTimeout(holdTimer.current);
+  useEffect(() => {
+    if (!svg) return;
+    // Once scrubbing (or pinching), the page mustn't scroll. Needs a non-passive listener.
+    const block = (event: TouchEvent) => {
+      if (scrubbing.current || event.touches.length > 1) event.preventDefault();
+    };
+    svg.addEventListener('touchmove', block, { passive: false });
+    return () => {
+      svg.removeEventListener('touchmove', block);
+      clearTimeout(holdTimer.current);
+    };
+  }, [svg]);
 
   const [y0, y1] = useMemo((): [number, number] => {
     if (yDomain) return yDomain;
@@ -197,7 +228,8 @@ export function LineChart({
   const indexAt = (clientX: number, target: Element) =>
     Math.min(final, Math.max(first, Math.round(x.invert(clientX - plotLeft(target)))));
 
-  // Touch: one finger pans a zoomed chart, two fingers pinch; a tap still shows the tooltip.
+  // Touch: a held finger scrubs (like hovering: the tooltip and the line nearest the finger
+  // follow it, up and down the order too); two fingers pinch and pan.
   const startGesture = (target: Element) => {
     gesture.current =
       touches.current.size > 0
@@ -207,15 +239,9 @@ export function LineChart({
   const moveGesture = () => {
     const g = gesture.current;
     const xs = [...touches.current.values()];
-    if (!g || !onViewChange || plotW <= 0 || xs.length !== g.xs.length) return false;
+    if (!g || !onViewChange || plotW <= 0 || xs.length !== 2 || g.xs.length !== 2) return false;
     const span0 = g.view[1] - g.view[0];
     const perPx = span0 / plotW;
-    if (xs.length === 1) {
-      if (!zoomed) return false;
-      const shift = (g.xs[0]! - xs[0]!) * perPx;
-      onViewChange(clampView([g.view[0] + shift, g.view[1] + shift], [start, last], MIN_SPAN));
-      return true;
-    }
     const [a0, b0] = g.xs as [number, number];
     const [a1, b1] = xs as [number, number];
     const mid0 = (a0 + b0) / 2 - g.left;
@@ -238,7 +264,17 @@ export function LineChart({
     if (event.pointerType === 'touch') {
       touches.current.set(event.pointerId, event.clientX);
       startGesture(event.currentTarget);
-      if (touches.current.size === 1) setHover(indexAt(event.clientX, event.currentTarget));
+      cancelHold();
+      if (touches.current.size === 1) {
+        const target = event.currentTarget;
+        const { clientX, clientY } = event;
+        holdTimer.current = setTimeout(() => {
+          scrubbing.current = true;
+          setPointerY(clientY - target.getBoundingClientRect().top - margin.top);
+          setHover(indexAt(clientX, target));
+          navigator.vibrate?.(10);
+        }, HOLD_MS);
+      }
       return;
     }
     if (event.button !== 0 || !onViewChange) return;
@@ -251,6 +287,14 @@ export function LineChart({
       touches.current.set(event.pointerId, event.clientX);
       if (moveGesture()) {
         setHover(null);
+        return;
+      }
+      if (!scrubbing.current) {
+        // Moving before the hold is up is a scroll or swipe, not a scrub.
+        const from = pressedAt.current;
+        if (from && Math.hypot(event.clientX - from.x, event.clientY - from.y) > HOLD_SLOP) {
+          cancelHold();
+        }
         return;
       }
     }
@@ -278,6 +322,15 @@ export function LineChart({
     if (event.pointerType === 'touch') {
       touches.current.delete(event.pointerId);
       startGesture(event.currentTarget);
+      cancelHold();
+      const wasScrubbing = scrubbing.current;
+      if (touches.current.size === 0) scrubbing.current = false;
+      if (wasScrubbing) return;
+      // A tap shows the tooltip at that lap.
+      if (click) {
+        trackPointer(event);
+        setHover(indexAt(event.clientX, event.currentTarget));
+      }
       // First tap on a line names it; a second tap on the same line highlights it.
       if (target && touches.current.size === 0) {
         if (tapped.current === target.s.id) {
@@ -339,6 +392,7 @@ export function LineChart({
     <div className="chart" ref={ref} style={{ height }}>
       {width > 0 && (
         <svg
+          ref={setSvg}
           width={width}
           height={height}
           role="img"

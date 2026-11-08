@@ -3,11 +3,13 @@ import {
   cautionRanges,
   cleanGreenLaps,
   labelCautions,
+  leaderSpells,
   pitSummary,
+  provisionalSummary,
   racePace,
   tireFalloff,
 } from '../../src/data/analysis/race.ts';
-import type { CarLaps, LapTimes, PitStop } from '../../src/data/feeds/race.ts';
+import type { CarLaps, LapTimes, PitStop, RaceSummary } from '../../src/data/feeds/race.ts';
 
 const CHV = { code: 'Chv', name: 'Chevrolet' };
 
@@ -121,5 +123,71 @@ describe('pitSummary', () => {
       avgBox: 9,
       cautionPositionsGained: -1,
     });
+  });
+});
+
+describe('a race in progress', () => {
+  // Grid, then laps 1-4: #2 takes the lead on lap 3; #3's laps stop after lap 2.
+  const running = (carNumber: string, positions: (number | null)[]): CarLaps => ({
+    carNumber,
+    name: `Car ${carNumber}`,
+    driverId: Number(carNumber),
+    manufacturer: CHV,
+    positions,
+    times: positions.map((p, lap) => (lap > 0 && p !== null ? 30 : null)),
+  });
+  const data: LapTimes = {
+    cars: [running('1', [1, 1, 1, 2, 2]), running('2', [2, 2, 2, 1, 1]), running('3', [3, 3, 3])],
+    flags: [8, 1, 2, 2, 1],
+    laps: 4,
+  };
+  const empty: RaceSummary = {
+    raceId: 1,
+    name: 'Race',
+    trackName: 'Track',
+    scheduledLaps: 200,
+    actualLaps: 0,
+    stageEnds: [60, 120, 200],
+    leadChanges: 0,
+    leaders: 0,
+    cautions: 0,
+    cautionLaps: 0,
+    marginOfVictory: 0,
+    averageSpeed: 0,
+    results: [],
+    stages: [],
+    cautionSegments: [],
+    leaderSpells: [],
+  };
+
+  it('finds who led each run of laps', () => {
+    expect(leaderSpells(data)).toEqual([
+      { startLap: 1, endLap: 2, carNumber: '1' },
+      { startLap: 3, endLap: 4, carNumber: '2' },
+    ]);
+  });
+
+  it('fills in the running order, leaders and cautions so far', () => {
+    const live = provisionalSummary(empty, data);
+    expect(
+      live.results.map((r) => [r.carNumber, r.finish, r.start, r.lapsLed, r.lapsCompleted]),
+    ).toEqual([
+      ['2', 1, 2, 2, 4],
+      ['1', 2, 1, 2, 4],
+      ['3', 3, 3, 0, 2],
+    ]);
+    expect(live).toMatchObject({
+      actualLaps: 4,
+      leadChanges: 1,
+      leaders: 2,
+      cautions: 1,
+      cautionLaps: 2,
+      stageEnds: [60, 120, 200],
+    });
+  });
+
+  it('leaves official results alone', () => {
+    const official = { ...empty, results: provisionalSummary(empty, data).results };
+    expect(provisionalSummary(official, data)).toBe(official);
   });
 });

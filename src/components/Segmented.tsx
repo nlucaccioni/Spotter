@@ -7,14 +7,21 @@ export function Segmented<T extends string | number>({
   options,
   value,
   onChange,
+  className,
 }: {
   label: string;
   options: readonly (readonly [T, string] | readonly [T, string, string])[];
   value: T;
   onChange: (value: T) => void;
+  /** Extra class, for placing the control in a layout. */
+  className?: string;
 }) {
   return (
-    <div className="segmented-control" role="group" aria-label={label}>
+    <div
+      className={className ? `segmented-control ${className}` : 'segmented-control'}
+      role="group"
+      aria-label={label}
+    >
       {options.map(([option, text, hint]) => (
         <button
           key={option}

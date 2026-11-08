@@ -35,15 +35,20 @@ const MIN_FULL_HEIGHT = 160;
 /** Room under the chart for the leader and caution strips (and their 4px gap). */
 const STRIP_SPACE = STRIP_HEIGHT + 4;
 
-/** Quick lap ranges for zooming: the whole race, or one stage ('s0' is stage 1). */
-function stageViews(stageEnds: readonly number[]): [string, string, XView | null][] {
+/**
+ * Quick lap ranges for zooming: the whole race, or one stage ('s0' is stage 1). With `lapsRun`
+ * (a race in progress), stages that haven't started yet are left out.
+ */
+function stageViews(
+  stageEnds: readonly number[],
+  lapsRun = Infinity,
+): [string, string, XView | null][] {
   const stages: [string, string, XView | null][] =
     stageEnds.length > 1
-      ? stageEnds.map((end, i) => [
-          `s${i}`,
-          `Stage ${i + 1}`,
-          [i === 0 ? 0 : stageEnds[i - 1]!, end],
-        ])
+      ? stageEnds.flatMap((end, i): [string, string, XView | null][] => {
+          const from = i === 0 ? 0 : stageEnds[i - 1]!;
+          return from < lapsRun ? [[`s${i}`, `Stage ${i + 1}`, [from, end]]] : [];
+        })
       : [];
   return [['race', 'Race', null], ...stages];
 }
@@ -130,7 +135,7 @@ export function RaceView({ raceKey, detail, favorites }: Props) {
     [laps, picked.slots],
   );
 
-  const ranges = stageViews(summary?.stageEnds ?? []);
+  const ranges = stageViews(summary?.stageEnds ?? [], detail.live ? totalLaps : Infinity);
   const range =
     (view ? ranges.find(([, , v]) => v && v[0] === view[0] && v[1] === view[1])?.[0] : 'race') ??
     'custom';
@@ -167,21 +172,28 @@ export function RaceView({ raceKey, detail, favorites }: Props) {
   const pits = useMemo(() => (stops ? pitSummary(stops) : []), [stops]);
 
   if (!summary || results.length === 0) {
-    return <p className="points__message">No results for this race yet.</p>;
+    return (
+      <p className="points__message">
+        {detail.live
+          ? 'The race hasn’t started yet. This fills in once the first laps are run.'
+          : 'No results for this race yet.'}
+      </p>
+    );
   }
 
   return (
     <div className="analysis__grid">
-      <RaceFacts summary={summary} />
+      <RaceFacts summary={summary} live={detail.live} />
 
       <Card
         ref={fullRef}
         className={isFull ? FULL_SCREEN_CLASS : undefined}
         title="Running order"
         note={
-          laps
+          (laps
             ? 'Position on every lap. Shaded laps were run under caution; S marks the end of each stage.'
-            : 'NASCAR hasn’t published lap-by-lap data for this race.'
+            : 'NASCAR hasn’t published lap-by-lap data for this race.') +
+          (detail.live ? ' Live: updates every 30 seconds.' : '')
         }
         controls={
           laps && (
@@ -341,7 +353,7 @@ export function RaceView({ raceKey, detail, favorites }: Props) {
                 .join(' ')
                 .trim() || undefined
             }
-            columns={pitColumns}
+            columns={pitColumns(colorOf)}
             initialSort={{ id: 'gained', desc: true }}
           />
         </Card>
@@ -350,7 +362,8 @@ export function RaceView({ raceKey, detail, favorites }: Props) {
   );
 }
 
-const pitColumns: Column<CarPitSummary>[] = [
+/** Pit table columns. Picked drivers are underlined in their chart line's color. */
+const pitColumns = (colorOf: (car: string) => string | null): Column<CarPitSummary>[] => [
   {
     id: 'car',
     label: '#',
@@ -362,7 +375,14 @@ const pitColumns: Column<CarPitSummary>[] = [
     id: 'driver',
     label: 'Driver',
     value: (p) => p.name,
-    render: (p) => <span className="points-driver">{p.name}</span>,
+    render: (p) => {
+      const color = colorOf(p.carNumber);
+      return (
+        <span className="points-driver" style={color ? { textDecorationColor: color } : undefined}>
+          {p.name}
+        </span>
+      );
+    },
     className: 'col-driver',
   },
   {
@@ -422,14 +442,32 @@ const pitColumns: Column<CarPitSummary>[] = [
   },
 ];
 
-function RaceFacts({ summary }: { summary: RaceSummary }) {
-  const winner = summary.results[0];
-  const facts: [label: string, value: string, meaning: string][] = [
+function RaceFacts({ summary, live }: { summary: RaceSummary; live: boolean }) {
+  const first = summary.results[0];
+  // Winner, margin and average speed only exist once the race is over.
+  const liveFacts: [label: string, value: string, meaning: string][] = [
+    [
+      'Leader',
+      first ? `#${first.carNumber} ${first.name}` : '—',
+      'The car number and driver leading at the end of the latest lap.',
+    ],
+    [
+      'Lap',
+      summary.scheduledLaps
+        ? `${summary.actualLaps} of ${summary.scheduledLaps}`
+        : `${summary.actualLaps}`,
+      'Laps run so far, out of the scheduled distance.',
+    ],
+  ];
+  const finalFacts: [label: string, value: string, meaning: string][] = [
     [
       'Winner',
-      winner ? `#${winner.carNumber} ${winner.name}` : '—',
+      first ? `#${first.carNumber} ${first.name}` : '—',
       'The car number and driver who won the race.',
     ],
+  ];
+  const facts: [label: string, value: string, meaning: string][] = [
+    ...(live ? liveFacts : finalFacts),
     [
       'Lead changes',
       `${summary.leadChanges} among ${summary.leaders}`,
@@ -440,17 +478,21 @@ function RaceFacts({ summary }: { summary: RaceSummary }) {
       `${summary.cautions} for ${summary.cautionLaps} laps`,
       'Caution periods (yellow flags), including stage breaks, and the laps run under them.',
     ],
-    [
-      'Margin',
-      summary.marginOfVictory > 0 ? `${summary.marginOfVictory.toFixed(3)} s` : '—',
-      'Margin of victory: how far the winner finished ahead of second place, in seconds.',
-    ],
-    [
-      'Avg speed',
-      summary.averageSpeed > 0 ? `${summary.averageSpeed.toFixed(1)} mph` : '—',
-      'The winner’s average speed over the whole race, caution laps included.',
-    ],
   ];
+  if (!live) {
+    facts.push(
+      [
+        'Margin',
+        summary.marginOfVictory > 0 ? `${summary.marginOfVictory.toFixed(3)} s` : '—',
+        'Margin of victory: how far the winner finished ahead of second place, in seconds.',
+      ],
+      [
+        'Avg speed',
+        summary.averageSpeed > 0 ? `${summary.averageSpeed.toFixed(1)} mph` : '—',
+        'The winner’s average speed over the whole race, caution laps included.',
+      ],
+    );
+  }
   return (
     <dl className="race-facts">
       {facts.map(([label, value, meaning]) => (
@@ -474,12 +516,16 @@ function RunningOrderTable({
   isFavorite: (driverId: number | null) => boolean;
 }) {
   const positions = new Map(detail.laps?.cars.map((c) => [c.carNumber, c.positions]) ?? []);
-  const stageEnds = summary.stageEnds.slice(0, -1);
+  // A race in progress only has stage ends it has reached.
+  const stageEnds = summary.stageEnds
+    .slice(0, -1)
+    .filter((lap) => !detail.live || lap <= summary.actualLaps);
+  const { live } = detail;
   const columns: Column<RaceResult>[] = [
     {
       id: 'fin',
-      label: 'Fin',
-      title: 'Finish',
+      label: live ? 'Pos' : 'Fin',
+      title: live ? 'Running position' : 'Finish',
       numeric: true,
       value: (r) => r.finish,
       render: (r) => <strong>{r.finish}</strong>,
@@ -531,17 +577,23 @@ function RunningOrderTable({
       render: (r) => r.lapsCompleted,
       className: 'p3',
     },
-    {
-      id: 'status',
-      label: 'Status',
-      value: (r) => r.status,
-      render: (r) => (isDnf(r.status) ? r.status : <span className="muted">{r.status}</span>),
-      className: 'p3',
-    },
+    // Status (running, accident, …) is only published with the official results.
+    ...(live
+      ? []
+      : [
+          {
+            id: 'status',
+            label: 'Status',
+            value: (r: RaceResult) => r.status,
+            render: (r: RaceResult) =>
+              isDnf(r.status) ? r.status : <span className="muted">{r.status}</span>,
+            className: 'p3',
+          },
+        ]),
   ];
   return (
     <DataTable
-      caption="Finishing order"
+      caption={live ? 'Running order' : 'Finishing order'}
       rows={summary.results}
       rowKey={(r) => `${r.driverId}`}
       rowClass={(r) => (isFavorite(r.driverId) ? 'timing-row--favorite' : undefined)}

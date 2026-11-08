@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   lapTimesUrl,
   parseLapTimes,
@@ -10,6 +10,7 @@ import {
   type RaceSummary,
 } from '../data/feeds/race.ts';
 import { parseLivePoints, parseSeasonPoints, seasonPointsUrl } from '../data/feeds/points.ts';
+import { provisionalSummary } from '../data/analysis/race.ts';
 import { isPenaltyUpdate, type OfficialStandings } from '../data/analysis/season.ts';
 import {
   parseRaceList,
@@ -20,7 +21,7 @@ import {
   type SeriesId,
 } from '../data/feeds/schedule.ts';
 import { weekendFeedUrl } from '../data/feeds/weekend.ts';
-import { fetchCached, fetchCachedStrict } from '../data/sources/cachedFetch.ts';
+import { fetchCached, fetchCachedStrict, fetchFresh } from '../data/sources/cachedFetch.ts';
 import {
   manufacturerPointsUrl,
   ownerPointsUrl,
@@ -34,6 +35,8 @@ import {
 // for the page's lifetime (see cachedFetch.ts), so switching views or series back is instant.
 
 const BATCH = 6;
+/** How often a race in progress re-reads its lap times, pit stops and results. */
+const LIVE_REFRESH_MS = 30_000;
 
 export type Load<T> =
   | { status: 'loading'; data: null; progress?: [done: number, total: number] }
@@ -43,13 +46,18 @@ export type Load<T> =
 const isSeries = (id: number): id is SeriesId => SERIES_IDS.includes(id as SeriesId);
 
 /**
- * Races that have been run this season, oldest first. In a past season every race whose
- * weekend has started counts: NASCAR leaves some winners blank in old race lists (late 2022).
+ * Races that have been run this season, oldest first, plus `liveRaceId` (the race in progress)
+ * if given. In a past season every race whose weekend has started counts: NASCAR leaves some
+ * winners blank in old race lists (late 2022).
  */
-export function useFinishedRaces(year: number, seriesId: number): Load<RaceListing[]> {
+export function useFinishedRaces(
+  year: number,
+  seriesId: number,
+  liveRaceId: number | null = null,
+): Load<RaceListing[]> {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<{ key: string; load: Load<RaceListing[]> } | null>(null);
-  const key = `${year}/${seriesId}/${attempt}`;
+  const key = `${year}/${seriesId}/${liveRaceId}/${attempt}`;
 
   useEffect(() => {
     if (!isSeries(seriesId)) return;
@@ -60,7 +68,7 @@ export function useFinishedRaces(year: number, seriesId: number): Load<RaceListi
         const now = Date.now();
         const past = year < new Date(now).getFullYear();
         const finished = races
-          .filter((r) => r.finished || (past && r.firstSessionMs < now))
+          .filter((r) => r.finished || r.raceId === liveRaceId || (past && r.firstSessionMs < now))
           .sort((a, b) => a.firstSessionMs - b.firstSessionMs);
         setState({ key, load: { status: 'ready', data: finished } });
       },
@@ -76,7 +84,7 @@ export function useFinishedRaces(year: number, seriesId: number): Load<RaceListi
     return () => {
       active = false;
     };
-  }, [year, seriesId, key]);
+  }, [year, seriesId, liveRaceId, key]);
 
   return state?.key === key ? state.load : { status: 'loading', data: null };
 }
@@ -191,54 +199,82 @@ export function useSeasonResults(
 }
 
 export interface RaceDetail {
+  /**
+   * For a race in progress, results so far are filled in from the lap times (see
+   * provisionalSummary) until NASCAR posts the official ones.
+   */
   summary: RaceSummary | null;
   /** Null when NASCAR has no lap times for the race (or they couldn't be read). */
   laps: LapTimes | null;
   stops: PitStop[] | null;
+  /** Still running (or just finished): no official results yet, and refreshed as it goes. */
+  live: boolean;
 }
 
-/** One race's results, lap times and pit stops. The lap and pit files are optional extras. */
-export function useRaceDetail(year: number, seriesId: number, raceId: number | null) {
+/**
+ * One race's results, lap times and pit stops. The lap and pit files are optional extras. With
+ * `live` (the race in progress), the files are re-read every 30 s until official results are out.
+ */
+export function useRaceDetail(year: number, seriesId: number, raceId: number | null, live = false) {
   const [attempt, setAttempt] = useState(0);
-  const key = `${year}/${seriesId}/${raceId}/${attempt}`;
+  const key = `${year}/${seriesId}/${raceId}/${live}/${attempt}`;
   const [state, setState] = useState<{ key: string; load: Load<RaceDetail> } | null>(null);
+  const loaded = useRef<string | null>(null);
 
   useEffect(() => {
     if (raceId === null) return;
     let active = true;
+    let official = false;
     const optional = <T>(promise: Promise<T>) => promise.catch(() => null);
-    Promise.all([
-      fetchCachedStrict(weekendFeedUrl(year, seriesId, raceId), parseRaceSummary),
-      optional(fetchCachedStrict(lapTimesUrl(year, seriesId, raceId), parseLapTimes)),
-      optional(fetchCachedStrict(pitDataUrl(year, seriesId, raceId), parsePitStops)),
-    ]).then(
-      ([summary, laps, stops]) => {
-        if (!active) return;
-        setState({
-          key,
-          load: {
-            status: 'ready',
-            data: {
-              summary,
-              laps: laps && laps.cars.length ? laps : null,
-              stops: stops && stops.length ? stops : null,
-            },
-          },
-        });
-      },
-      () => {
-        if (active) {
+    const load = () => {
+      // A race in progress always reads the latest files; a finished race uses the cache.
+      const get = live ? fetchFresh : fetchCachedStrict;
+      Promise.all([
+        get(weekendFeedUrl(year, seriesId, raceId), parseRaceSummary),
+        optional(get(lapTimesUrl(year, seriesId, raceId), parseLapTimes)),
+        optional(get(pitDataUrl(year, seriesId, raceId), parsePitStops)),
+      ]).then(
+        ([summary, laps, stops]) => {
+          if (!active) return;
+          official = (summary?.results.length ?? 0) > 0;
+          const lapData = laps && laps.cars.length ? laps : null;
+          loaded.current = key;
           setState({
             key,
-            load: { status: 'error', data: null, retry: () => setAttempt((n) => n + 1) },
+            load: {
+              status: 'ready',
+              data: {
+                summary:
+                  summary && lapData && live ? provisionalSummary(summary, lapData) : summary,
+                laps: lapData,
+                stops: stops && stops.length ? stops : null,
+                live: live && !official,
+              },
+            },
           });
-        }
-      },
-    );
+        },
+        () => {
+          // A failed refresh keeps showing the last data.
+          if (active && loaded.current !== key) {
+            setState({
+              key,
+              load: { status: 'error', data: null, retry: () => setAttempt((n) => n + 1) },
+            });
+          }
+        },
+      );
+    };
+    load();
+    const timer = live
+      ? setInterval(() => {
+          if (!official) load();
+        }, LIVE_REFRESH_MS)
+      : undefined;
     return () => {
       active = false;
+      clearInterval(timer);
     };
-  }, [year, seriesId, raceId, key]);
+  }, [year, seriesId, raceId, live, key]);
 
   return state?.key === key ? state.load : ({ status: 'loading', data: null } as Load<RaceDetail>);
 }

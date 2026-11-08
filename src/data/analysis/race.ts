@@ -1,4 +1,11 @@
-import type { CautionSegment, LapTimes, PitStop } from '../feeds/race.ts';
+import type {
+  CautionSegment,
+  LapTimes,
+  LeaderSpell,
+  PitStop,
+  RaceResult,
+  RaceSummary,
+} from '../feeds/race.ts';
 
 // Single-race figures from lap-times.json and live-pit-data.json.
 
@@ -202,4 +209,63 @@ export function labelCautions(
     const close = nearest && Math.abs(nearest.startLap - range.from) <= 4;
     return { ...range, label: close ? nearest.comment || nearest.reason : '' };
   });
+}
+
+/** Who led each lap, as runs of consecutive laps (lap-times.json's P1 at the end of each lap). */
+export function leaderSpells(data: LapTimes): LeaderSpell[] {
+  const spells: LeaderSpell[] = [];
+  for (let lap = 1; lap <= data.laps; lap++) {
+    const leader = data.cars.find((c) => c.positions[lap] === 1);
+    if (!leader) continue;
+    const prev = spells[spells.length - 1];
+    if (prev && prev.carNumber === leader.carNumber && prev.endLap === lap - 1) prev.endLap = lap;
+    else spells.push({ startLap: lap, endLap: lap, carNumber: leader.carNumber });
+  }
+  return spells;
+}
+
+/**
+ * A race still running has no official results yet. This fills them in from the lap times so
+ * far: the running order (as "finish"), grid spots, laps led, leaders and cautions. Whatever the
+ * weekend feed already has (stage results, caution reasons) is kept. Returns the summary
+ * unchanged once official results are out.
+ */
+export function provisionalSummary(summary: RaceSummary, data: LapTimes): RaceSummary {
+  if (summary.results.length > 0 || data.cars.length === 0) return summary;
+  const spells = leaderSpells(data);
+  const order = data.cars
+    .map((car) => {
+      let lap = car.positions.length - 1;
+      while (lap > 0 && car.positions[lap] === null) lap--;
+      return { car, lap, position: lap > 0 ? car.positions[lap]! : null };
+    })
+    .filter((x) => x.position !== null)
+    // Cars on the latest lap first, in running order; cars whose laps stopped earlier after.
+    .sort((a, b) => b.lap - a.lap || a.position! - b.position!);
+  const results = order.map(({ car, lap }, i): RaceResult => ({
+    driverId: car.driverId ?? 0,
+    carNumber: car.carNumber,
+    name: car.name,
+    team: null,
+    manufacturer: car.manufacturer,
+    finish: i + 1,
+    start: car.positions[0] ?? 0,
+    lapsLed: car.positions.filter((p, l) => l > 0 && p === 1).length,
+    lapsCompleted: lap,
+    status: '',
+    points: 0,
+    playoffPoints: 0,
+    pointsPosition: 0,
+  }));
+  const cautions = cautionRanges(data.flags);
+  return {
+    ...summary,
+    actualLaps: data.laps,
+    leadChanges: Math.max(0, spells.length - 1),
+    leaders: new Set(spells.map((s) => s.carNumber)).size,
+    cautions: cautions.length,
+    cautionLaps: cautions.reduce((sum, c) => sum + c.to - c.from + 1, 0),
+    results,
+    leaderSpells: spells,
+  };
 }

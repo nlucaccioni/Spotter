@@ -1515,6 +1515,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
+  cursor: pointer;
 }
 
 /* ---- Charts ---- */
@@ -1527,7 +1528,16 @@
 .chart svg {
   display: block;
   overflow: visible;
+  /* Vertical swipes scroll the page; holding a finger still scrubs and pinching zooms, which
+     LineChart handles (and then stops the page scrolling). */
   touch-action: pan-y;
+}
+
+/* A long press shouldn't select the chart or pop up the browser's callout. */
+.chart {
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .chart svg:focus-visible {
@@ -1855,4 +1865,104 @@
   position: fixed;
   inset: 0;
   z-index: 50;
+}
+
+/* ---- Hover states ----
+   Every control gets the same hover as the icon buttons (.control-button): a light fill, or
+   brighter text for header sort buttons. Only where there's a real hover (a mouse or trackpad),
+   so a tapped button on a phone doesn't stay lit. */
+@media (hover: hover) {
+  .drawer__close:hover,
+  .drawer__link:hover,
+  .feed-status__retry:hover,
+  .driver-picker__add:hover,
+  .drawer__select select:hover,
+  .segmented-control__option:not([aria-pressed='true']):hover {
+    background: var(--badge-bg);
+    color: var(--text);
+  }
+
+  .stale-notice__retry:hover {
+    background: color-mix(in srgb, currentColor 15%, transparent);
+  }
+
+  .sort-button:hover,
+  .analysis-table__sort:hover {
+    color: var(--text);
+  }
+}
+
+/* ---- Analysis on phones ----
+   Header: series and season/race first (what to look at), then the year and, in the race view,
+   the race (which one), each row filling the width. Tab rows in the cards fill the width too. */
+@media (max-width: 560px) {
+  /* Five equal columns: Cup, O'Reilly and Truck take three, Season and Race two, so all five
+     buttons are the same width. */
+  .analysis .points__controls {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+
+  .analysis .analysis__series {
+    grid-area: 1 / 1 / 2 / 4;
+  }
+
+  .analysis .analysis__view {
+    grid-area: 1 / 4 / 2 / -1;
+  }
+
+  .analysis .analysis__year-select {
+    grid-area: 2 / 1 / 3 / -1;
+  }
+
+  .analysis .points__controls:has(.analysis__race-select) .analysis__year-select {
+    grid-column: 1;
+  }
+
+  .analysis .analysis__race-select {
+    grid-area: 2 / 2 / 3 / -1;
+  }
+
+  .analysis .points__controls .series-select {
+    display: flex;
+    min-width: 0;
+  }
+
+  .analysis .points__controls .series-select__input {
+    width: 100%;
+    max-width: none;
+    height: 32px;
+    padding-left: 6px;
+  }
+
+  .analysis .segmented-control {
+    display: flex;
+  }
+
+  .analysis .segmented-control__option {
+    flex: 1 1 auto;
+    padding-inline: 8px;
+    white-space: nowrap;
+  }
+
+  .analysis .points__controls .segmented-control__option {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 2px;
+  }
+
+  .analysis-card__controls {
+    width: 100%;
+  }
+
+  .analysis-card__controls .segmented-control,
+  .chart-zoom .segmented-control {
+    flex: 1 1 auto;
+  }
+
+  .chart-zoom .segmented-control {
+    flex-basis: 100%;
+  }
 }

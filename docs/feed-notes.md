@@ -275,3 +275,14 @@ Note, NoteID, DriverIDs }] } }`. Written commentary, current to the
   past season the page counts every race whose weekend has started; the owners' file is an empty
   list for some seasons (Cup 2022 and 2025) and 403 before 2019; the manufacturers' file is 403
   before 2019; `teams.json` (logos) only exists for 2025 on, so older seasons borrow 2025's.
+
+### 2026-11-08 — Per-race files during a live race
+
+Checked during the Cup Championship Race (5601, around lap 40): **`lap-times.json`** and
+**`live-pit-data.json`** update while the race runs (lap times kept pace with `live-feed.json`'s
+lap within a lap), but the **weekend feed's results** stay the entry list (`finishing_position` 0)
+with no `race_leaders` or `stage_results` until NASCAR posts the official results, and the race
+list's `winner_driver_id` stays null until then. The analysis page lists the race in progress,
+re-reads its three files every 30 s, and fills in the running order, leaders and cautions from
+the lap times until official results appear. Its lead changes and leaders matched
+`live-feed.json` exactly.
